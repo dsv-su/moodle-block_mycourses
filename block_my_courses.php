@@ -38,14 +38,14 @@ class block_my_courses extends block_base {
      *
      * @return object
      */
-	public function get_content() {
-	    global $USER, $DB, $CFG;
+    public function get_content() {
+        global $USER, $DB, $CFG;
 	
         $this->content = new stdClass();
         $this->content->text = '';
-        
+
         $courses = enrol_get_users_courses($USER->id, false, 'id, shortname, modinfo, sectioncache', $sort = 'visible DESC,sortorder ASC');
-        
+
         $categorizedcourses = array();
         $categorizedcourses['passed'] = array();
         $categorizedcourses['ongoing'] = array();
@@ -101,22 +101,22 @@ class block_my_courses extends block_base {
             $instance = context::instance_by_id($course->ctxid);
             $activeoncourse = is_enrolled($instance, NULL, '', true);
             $courseid = $course->idnumber;
-            
+
             if ($hasidnumber && in_array($courseid, $passedcourseids)) {
                 // This is a passed course
                 $categorizedcourses['passed'][] = $course;
-                
+
             } elseif ($activeoncourse) {
                 // This course is currently ongoing
                 $categorizedcourses['ongoing'][] = $course;
-                
+
             } else {
                 // This course is upcoming
                 $categorizedcourses['upcoming'][] = $course;
-                
+
             }
         }
-        
+
         // Print upcoming courses
         $this->content->text.='<h2>'.get_string('upcomingcourses', 'block_my_courses').'</h2>';
         $this->content->text.=$this->print_overview_starttime($categorizedcourses['upcoming']);
@@ -144,25 +144,25 @@ class block_my_courses extends block_base {
             $this->content->text.=ob_get_contents();
             ob_end_clean();
         }
-	}
-	
-	public function print_overview_starttime($courses) {
+    }
+
+    public function print_overview_starttime($courses) {
         global $USER, $DB, $OUTPUT;
-        
+
         // Collect course id's
         $courseids = array();
-        
+
         foreach ($courses as $course) {
             $courseids[] = $course->id;
         }
-        
+
         // Super awesome SQL. You may touch my shoulder.
         $sql = "SELECT userid, courseid, timestart
                 FROM mdl_user_enrolments ue
                 INNER JOIN mdl_enrol e
                 ON e.id = ue.enrolid
                 WHERE userid = ? AND courseid IN ( ? )";
-        
+
         // Get starting times from the database
         $sqlobject = array();
         $sqlobject = $DB->get_records_sql($sql, array($USER->id, implode(',', $courseids)));
@@ -174,7 +174,7 @@ class block_my_courses extends block_base {
         }
 
         // Loop over each course, create html code and append to 'result'
-	    $result = '';
+        $result = '';
         foreach ($courses as $course) {
             // Get course start time
             $coursestart = $starttimes[$course->id];
@@ -183,16 +183,16 @@ class block_my_courses extends block_base {
             $formattedstart = get_string('coursestarts', 'block_my_courses').': ';
             $formattedstart .= date('d M Y', $coursestart);
 
-	        $result .= $OUTPUT->box_start('coursebox');
-	        $result .= $OUTPUT->container('<h3>'.$course->fullname.'</h3>');
-	        $result .= $OUTPUT->container($formattedstart);
-	        $result .= $OUTPUT->box_end();
+            $result .= $OUTPUT->box_start('coursebox');
+            $result .= $OUTPUT->container('<h3>'.$course->fullname.'</h3>');
+            $result .= $OUTPUT->container($formattedstart);
+            $result .= $OUTPUT->box_end();
         }
 
-	    return $result;
-	}
+        return $result;
+    }
 
-	/**
+    /**
      * allow the block to have a configuration page
      *
      * @return boolean
