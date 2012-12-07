@@ -2,6 +2,7 @@
 $string['apiuser'] = 'API-användare';
 $string['apikey'] = 'API-nyckel';
 $string['coursestarts'] = 'Den här kursen börjar';
+$string['nocourses'] = 'Inga kurser att visa';
 $string['ongoingcourses'] = 'Pågående kurser';
 $string['passedcourses'] = 'Avklarade kurser';
 $string['pluginname'] = 'Mina kurser';

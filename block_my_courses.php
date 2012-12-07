@@ -118,29 +118,41 @@ class block_my_courses extends block_base {
             }
         }
 
-        // Print upcoming courses
-        $this->content->text.=html_writer::tag('h2', get_string('upcomingcourses', 'block_my_courses'));
-        $this->content->text.=$this->print_overview_starttime($categorizedcourses['upcoming']);
-
-        // Print ongoing courses
-        ob_start();
-        require_once $CFG->dirroot."/course/lib.php";
-        print_overview($categorizedcourses['ongoing']);
-        $ongoingcontent[] = ob_get_contents();
-        ob_end_clean();
-
-        $this->content->text.=html_writer::tag('h2', get_string('ongoingcourses', 'block_my_courses'));
-        $this->content->text.=implode($ongoingcontent);
-
-        // Print passed courses if user has idnumber
-        if ($hasidnumber) {
+        // Print courses
+        $nocoursesprinted = true;
+        if (!empty($categorizedcourses['upcoming'])) {
+            // Upcoming courses
+            $this->content->text.=html_writer::tag('h2', get_string('upcomingcourses', 'block_my_courses'));
+            $this->content->text.=$this->print_overview_starttime($categorizedcourses['upcoming']);
+        
+            $nocoursesprinted = false;
+        }
+        if (!empty($categorizedcourses['ongoing'])) {
+            // Ongoing courses
             ob_start();
+            require_once $CFG->dirroot."/course/lib.php";
+            print_overview($categorizedcourses['ongoing']);
+            $ongoingcontent[] = ob_get_contents();
+            ob_end_clean();
+
+            $this->content->text.=html_writer::tag('h2', get_string('ongoingcourses', 'block_my_courses'));
+            $this->content->text.=implode($ongoingcontent);
+
+            $nocoursesprinted = false;
+        }
+        if ($hasidnumber && !empty($categorizedcourses['passed'])) {
+            // Passed courses (if user has idnumber)ob_start();
             print_overview($categorizedcourses['passed']);
             $passedcontent[] = ob_get_contents();
             ob_end_clean();
 
             $this->content->text.=html_writer::tag('h2', get_string('passedcourses', 'block_my_courses'));
             $this->content->text.=implode($passedcontent);
+
+            $nocoursesprinted = false;        
+        }
+        if ($nocoursesprinted) {
+            $this->content->text.=get_string('nocourses', 'block_my_courses');
         }
     }
 
