@@ -40,6 +40,9 @@ class block_my_courses extends block_base {
      */
     public function get_content() {
         global $USER, $DB, $CFG;
+        if($this->content !== NULL) {
+            return $this->content;
+        }
 	
         $this->content = new stdClass();
         $this->content->text = '';
@@ -48,8 +51,8 @@ class block_my_courses extends block_base {
                 sectioncache', $sort = 'visible DESC,sortorder ASC');
 
         $categorizedcourses = array();
-        $categorizedcourses['passed'] = array();
-        $categorizedcourses['ongoing'] = array();
+        $categorizedcourses['passed']   = array();
+        $categorizedcourses['ongoing']  = array();
         $categorizedcourses['upcoming'] = array();
 
         $passedcourseids = array();
@@ -155,6 +158,8 @@ class block_my_courses extends block_base {
         if ($nocoursesprinted) {
             $this->content->text.=get_string('nocourses', 'block_my_courses');
         }
+
+        return $this->content;
     }
 
     public function print_overview_starttime($courses) {
