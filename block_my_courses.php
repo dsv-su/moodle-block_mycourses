@@ -76,13 +76,13 @@ class block_my_courses extends block_base {
             curl_setopt($ch, CURLOPT_USERPWD, $username.':'.$password);
             curl_setopt($ch, CURLOPT_HTTPHEADER, array('Accept: application/json'));
             curl_setopt($ch, CURLOPT_URL, $apiurl.implode('/', $params));
-            $contents = curl_exec($ch);
-            $headers  = curl_getinfo($ch);
+            $curlcontents = curl_exec($ch);
+            $curlheader  = curl_getinfo($ch);
             curl_close($ch);
 
-            if ($headers['http_code'] == 200) {
+            if ($curlheader['http_code'] == 200) {
                 // Do something with the received data here
-                $passedcourses = json_decode($contents);
+                $passedcourses = json_decode($curlcontents);
 
                 foreach ($passedcourses as $passedcourse) {
                     $passedcourseids[] = $passedcourse->id;
@@ -91,13 +91,13 @@ class block_my_courses extends block_base {
             } else {
                 // Create and show an error message
                 $error = new stdClass;
-                $error->httpcode = $headers['http_code'];
+                $error->httpcode = $curlheader['http_code'];
                 $error->path     = implode('/', $params);
                 echo get_string('servererror', 'block_my_courses', $error)."\n";
-            } // End headers if
+            }
+        }
 
-        } // End get passed courses
-
+        // Sort courses
         foreach ($courses as $course) {
             $instance = context::instance_by_id($course->ctxid);
             $activeoncourse = is_enrolled($instance, NULL, '', true);
@@ -124,24 +124,23 @@ class block_my_courses extends block_base {
 
         // Print ongoing courses
         ob_start();
-        foreach ($categorizedcourses['ongoing'] as $course) {
-            /* This resolves a bug that manifests itself when we just send
-             * $categorizedcourses['ongoing'] to print_overview() when the user
-             * doesn't have an idnumber
-             */
-            print_overview(array($course));
-        }
-        $this->content->text.=html_writer::tag('h2', get_string('ongoingcourses', 'block_my_courses'));
-        $this->content->text.=ob_get_contents();
+        require_once $CFG->dirroot."/course/lib.php";
+        print_overview($categorizedcourses['ongoing']);
+        $ongoingcontent[] = ob_get_contents();
         ob_end_clean();
+
+        $this->content->text.=html_writer::tag('h2', get_string('ongoingcourses', 'block_my_courses'));
+        $this->content->text.=implode($ongoingcontent);
 
         // Print passed courses if user has idnumber
         if ($hasidnumber) {
             ob_start();
             print_overview($categorizedcourses['passed']);
-            $this->content->text.=html_writer::tag('h2', get_string('passedcourses', 'block_my_courses'));
-            $this->content->text.=ob_get_contents();
+            $passedcontent[] = ob_get_contents();
             ob_end_clean();
+
+            $this->content->text.=html_writer::tag('h2', get_string('passedcourses', 'block_my_courses'));
+            $this->content->text.=implode($passedcontent);
         }
     }
 
