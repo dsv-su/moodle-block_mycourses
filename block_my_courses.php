@@ -141,7 +141,8 @@ class block_my_courses extends block_base {
             $nocoursesprinted = false;
         }
         if ($hasidnumber && !empty($categorizedcourses['passed'])) {
-            // Passed courses (if user has idnumber)ob_start();
+            // Passed courses (if user has idnumber)
+            ob_start();
             print_overview($categorizedcourses['passed']);
             $passedcontent[] = ob_get_contents();
             ob_end_clean();
