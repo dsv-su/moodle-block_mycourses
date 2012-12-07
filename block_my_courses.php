@@ -44,7 +44,8 @@ class block_my_courses extends block_base {
         $this->content = new stdClass();
         $this->content->text = '';
 
-        $courses = enrol_get_users_courses($USER->id, false, 'id, shortname, modinfo, sectioncache', $sort = 'visible DESC,sortorder ASC');
+        $courses = enrol_get_users_courses($USER->id, false, 'id, shortname, modinfo,
+                sectioncache', $sort = 'visible DESC,sortorder ASC');
 
         $categorizedcourses = array();
         $categorizedcourses['passed'] = array();
@@ -118,7 +119,7 @@ class block_my_courses extends block_base {
         }
 
         // Print upcoming courses
-        $this->content->text.='<h2>'.get_string('upcomingcourses', 'block_my_courses').'</h2>';
+        $this->content->text.=html_writer::tag('h2', get_string('upcomingcourses', 'block_my_courses'));
         $this->content->text.=$this->print_overview_starttime($categorizedcourses['upcoming']);
 
         // Print ongoing courses
@@ -128,11 +129,9 @@ class block_my_courses extends block_base {
              * $categorizedcourses['ongoing'] to print_overview() when the user
              * doesn't have an idnumber
              */
-            $data = array();
-            $data[] = $course;
-            print_overview($data);
+            print_overview(array($course));
         }
-        $this->content->text.='<h2>'.get_string('ongoingcourses', 'block_my_courses').'</h2>';
+        $this->content->text.=html_writer::tag('h2', get_string('ongoingcourses', 'block_my_courses'));
         $this->content->text.=ob_get_contents();
         ob_end_clean();
 
@@ -140,7 +139,7 @@ class block_my_courses extends block_base {
         if ($hasidnumber) {
             ob_start();
             print_overview($categorizedcourses['passed']);
-            $this->content->text.='<h2>'.get_string('passedcourses', 'block_my_courses').'</h2>';
+            $this->content->text.=html_writer::tag('h2', get_string('passedcourses', 'block_my_courses'));
             $this->content->text.=ob_get_contents();
             ob_end_clean();
         }
@@ -184,7 +183,7 @@ class block_my_courses extends block_base {
             $formattedstart .= date('d M Y', $coursestart);
 
             $result .= $OUTPUT->box_start('coursebox');
-            $result .= $OUTPUT->container('<h3>'.$course->fullname.'</h3>');
+            $result .= $OUTPUT->container(html_writer::tag('h3', $course->fullname));
             $result .= $OUTPUT->container($formattedstart);
             $result .= $OUTPUT->box_end();
         }

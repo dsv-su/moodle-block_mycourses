@@ -19,7 +19,8 @@
  *
  * @package    block
  * @subpackage course_overview
- * @copyright  1999 onwards Martin Dougiamas (http://dougiamas.com)
+ * @copyright 2012 Department of Computer and System Sciences,
+ *                                      Stockholm University {@link http://dsv.su.se}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
