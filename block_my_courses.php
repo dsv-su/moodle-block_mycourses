@@ -39,7 +39,7 @@ class block_my_courses extends block_base {
      * @return object
      */
     public function get_content() {
-        global $USER, $DB, $CFG;
+        global $USER, $CFG;
         if($this->content !== NULL) {
             return $this->content;
         }
@@ -47,12 +47,13 @@ class block_my_courses extends block_base {
         $this->content = new stdClass();
         $this->content->text = '';
 
-        $courses = enrol_get_users_courses($USER->id, false, 'id, shortname, modinfo,
-                sectioncache', $sort = 'visible DESC,sortorder ASC');
+        // Get courses
+        $ongoingcourses = enrol_get_my_courses('id, shortname, modinfo, sectioncache', 'visible DESC,sortorder ASC', 20);
+        $allcourses = enrol_get_users_courses($USER->id, false, 'id, shortname, modinfo,
+                sectioncache', 'visible DESC,sortorder ASC');
 
         $categorizedcourses = array();
         $categorizedcourses['passed']   = array();
-        $categorizedcourses['ongoing']  = array();
         $categorizedcourses['upcoming'] = array();
 
         $passedcourseids = array();
@@ -99,25 +100,38 @@ class block_my_courses extends block_base {
                 echo get_string('servererror', 'block_my_courses', $error)."\n";
             }
         }
+       
+        foreach ($allcourses as $c) {
+            if (isset($USER->lastcourseaccess[$c->id])) {
+                $allcourses[$c->id]->lastaccess = $USER->lastcourseaccess[$c->id];
+            } else {
+                $allcourses[$c->id]->lastaccess = 0;
+            }
+        }
 
         // Sort courses
-        foreach ($courses as $course) {
+        foreach ($allcourses as $course) {
             $instance = context::instance_by_id($course->ctxid);
             $activeoncourse = is_enrolled($instance, NULL, '', true);
             $courseid = $course->idnumber;
 
             if ($hasidnumber && in_array($courseid, $passedcourseids)) {
-                // This is a passed course
+                // This is a passed course. Remove it from $ongoingcourses
                 $categorizedcourses['passed'][] = $course;
+                unset($ongoingcourses[$course->id]);
 
-            } elseif ($activeoncourse) {
-                // This course is currently ongoing
-                $categorizedcourses['ongoing'][] = $course;
-
-            } else {
-                // This course is upcoming
+            } else if (!$activeoncourse) {
+                // This course is upcoming. Remove it from $ongoingcourses
                 $categorizedcourses['upcoming'][] = $course;
+                unset($ongoingcourses[$course->id]);
+            }
+        }
 
+        foreach ($ongoingcourses as $c) {
+            if (isset($USER->lastcourseaccess[$c->id])) {
+                $ongoingcourses[$c->id]->lastaccess = $USER->lastcourseaccess[$c->id];
+            } else {
+                $ongoingcourses[$c->id]->lastaccess = 0;
             }
         }
 
@@ -127,14 +141,14 @@ class block_my_courses extends block_base {
             // Upcoming courses
             $this->content->text.=html_writer::tag('h2', get_string('upcomingcourses', 'block_my_courses'));
             $this->content->text.=$this->print_overview_starttime($categorizedcourses['upcoming']);
-        
+
             $nocoursesprinted = false;
         }
-        if (!empty($categorizedcourses['ongoing'])) {
+        if (!empty($ongoingcourses)) {
             // Ongoing courses
             ob_start();
             require_once $CFG->dirroot."/course/lib.php";
-            print_overview($categorizedcourses['ongoing']);
+            print_overview($ongoingcourses);
             $ongoingcontent[] = ob_get_contents();
             ob_end_clean();
 
