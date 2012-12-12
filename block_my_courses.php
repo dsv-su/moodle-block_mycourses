@@ -30,7 +30,7 @@ class block_my_courses extends block_base {
      * block initializations
      */
     public function init() {
-        $this->title   = get_string('pluginname', 'block_my_courses');
+        $this->title = get_string('pluginname', 'block_my_courses');
     }
 
     /**
@@ -48,7 +48,8 @@ class block_my_courses extends block_base {
         $this->content->text = '';
 
         // Get courses
-        $ongoingcourses = enrol_get_my_courses('id, shortname, modinfo, sectioncache', 'visible DESC,sortorder ASC', 20);
+        $ongoingcourses = enrol_get_my_courses('id, shortname, modinfo, sectioncache',
+                'visible DESC,sortorder ASC', 20);
         $allcourses = enrol_get_users_courses($USER->id, false, 'id, shortname, modinfo,
                 sectioncache', 'visible DESC,sortorder ASC');
 
@@ -57,7 +58,6 @@ class block_my_courses extends block_base {
         $categorizedcourses['upcoming'] = array();
 
         $passedcourseids = array();
-        $passedcourses;
 
         $hasidnumber = false;
 
