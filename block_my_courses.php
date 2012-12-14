@@ -43,7 +43,7 @@ class block_my_courses extends block_base {
         if($this->content !== NULL) {
             return $this->content;
         }
-	
+
         $this->content = new stdClass();
         $this->content->text = '';
 
@@ -55,6 +55,7 @@ class block_my_courses extends block_base {
 
         $categorizedcourses = array();
         $categorizedcourses['passed']   = array();
+        $categorizedcourses['teaching'] = array();
         $categorizedcourses['upcoming'] = array();
 
         $passedcourseids = array();
@@ -100,7 +101,7 @@ class block_my_courses extends block_base {
                 echo get_string('servererror', 'block_my_courses', $error)."\n";
             }
         }
-       
+
         foreach ($allcourses as $c) {
             if (isset($USER->lastcourseaccess[$c->id])) {
                 $allcourses[$c->id]->lastaccess = $USER->lastcourseaccess[$c->id];
@@ -109,11 +110,31 @@ class block_my_courses extends block_base {
             }
         }
 
+        // Get the different teaching roles
+        $teachingroles = array_merge(get_archetype_roles('teacher'), get_archetype_roles('editingteacher'));
+
         // Sort courses
         foreach ($allcourses as $course) {
             $instance = context::instance_by_id($course->ctxid);
             $activeoncourse = is_enrolled($instance, NULL, '', true);
             $courseid = $course->idnumber;
+            $context = get_context_instance(CONTEXT_COURSE, $course->id);
+            $roles = get_user_roles($context, $USER->id);
+
+            // See if the user is a teacher in this course, take appropriate action...
+            foreach ($roles as $r) {
+                foreach ($teachingroles as $tr) {
+                    if (!strcmp($r->shortname, $tr->shortname) && count($roles) == 1) {
+                        // This user is a teacher in this course, but no student
+                        $categorizedcourses['teaching'][] = $course;
+                        unset($ongoingcourses[$course->id]);
+
+                    } else if (!strcmp($r->shortname, $tr->shortname)) {
+                        // This user is both a teacher and a student in this course!
+                        $categorizedcourses['teaching'][] = $course;
+                    }
+                }
+            }
 
             if ($hasidnumber && in_array($courseid, $passedcourseids)) {
                 // This is a passed course. Remove it from $ongoingcourses
@@ -136,6 +157,17 @@ class block_my_courses extends block_base {
         }
 
         // Print courses
+        require_once $CFG->dirroot."/course/lib.php";
+        if (!empty($categorizedcourses['teaching'])) {
+            // Teaching courses
+            $this->content->text.=html_writer::tag('h2', get_string('teachingcourses', 'block_my_courses'));
+            ob_start();
+            print_overview($categorizedcourses['teaching']);
+            $teachingcontent[] = ob_get_contents();
+            ob_end_clean();
+            $this->content->text.=implode($teachingcontent);
+        }
+
         $nocoursesprinted = true;
         if (!empty($categorizedcourses['upcoming'])) {
             // Upcoming courses
@@ -147,7 +179,6 @@ class block_my_courses extends block_base {
         if (!empty($ongoingcourses)) {
             // Ongoing courses
             ob_start();
-            require_once $CFG->dirroot."/course/lib.php";
             print_overview($ongoingcourses);
             $ongoingcontent[] = ob_get_contents();
             ob_end_clean();
@@ -167,7 +198,7 @@ class block_my_courses extends block_base {
             $this->content->text.=html_writer::tag('h2', get_string('passedcourses', 'block_my_courses'));
             $this->content->text.=implode($passedcontent);
 
-            $nocoursesprinted = false;        
+            $nocoursesprinted = false;
         }
         if ($nocoursesprinted) {
             $this->content->text.=get_string('nocourses', 'block_my_courses');
@@ -238,5 +269,5 @@ class block_my_courses extends block_base {
      */
     public function applicable_formats() {
         return array('my-index'=>true);
-    }	
+    }
 }
