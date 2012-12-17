@@ -149,18 +149,31 @@ class block_my_courses extends block_base {
             }
         }
 
-        // Get passed teaching courses
+        // Sort passed teaching courses
         foreach ($categorizedcourses['teaching']['ongoing'] as $course) {
             if (!empty($course->idnumber)) {
-                $params = array();
-                $params[] = 'rest';
-                $params[] = 'courseSegment';
-                $params[] = $course->idnumber;
+                $result = array();
 
-                $result = $this->api_call($params);
+                $idnumbers = explode(',', trim($course->idnumber));
+                foreach ($idnumbers as $id) {
+                    $params = array();
+                    $params[] = 'rest';
+                    $params[] = 'courseSegment';
+                    $params[] = $id;
+                    $result[] = $this->api_call($params);
+                }
+
                 if (!empty($result)) {
-                    if (strtotime($result->endDate) < time()) {
-                        // This course is passed
+                    $bestmatch = current($result);
+                    foreach ($result as $r) {
+                        if (strtotime($r->endDate) > strtotime($bestmatch->endDate)) {
+                            // This is the most current course instance
+                            $bestmatch = $r;
+                        }
+                    }
+
+                    if (strtotime($bestmatch->endDate) < time()) {
+                        // This is a passed course
                         $categorizedcourses['teaching']['passed'][$course->id] = $course;
                         unset($categorizedcourses['teaching']['ongoing'][$course->id]);
                     }
