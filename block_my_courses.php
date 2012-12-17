@@ -140,7 +140,7 @@ class block_my_courses extends block_base {
                 } else if (in_array($r, $teachingroles) && count($roles) == 1) {
                     $categorizedcourses['teaching'][$course->id] = $course;
                     continue 2;
-                } else if (!in_array($r, $studentroles) && in_array($r->shortname, $teachingroles)) {
+                } else if (!in_array($r, $studentroles) && in_array($r, $teachingroles)) {
                     $categorizedcourses['teaching'][$course->id] = $course;
                     continue 2;
                 } else if (in_array($r, $teachingroles)) {
