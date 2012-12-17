@@ -48,15 +48,14 @@ class block_my_courses extends block_base {
         $this->content->text = '';
 
         // Get courses
-        $ongoingcourses = enrol_get_my_courses('id, shortname, modinfo, sectioncache',
-                'visible DESC,sortorder ASC', 20);
         $allcourses = enrol_get_users_courses($USER->id, false, 'id, shortname, modinfo,
                 sectioncache', 'visible DESC,sortorder ASC');
 
         $categorizedcourses = array();
-        $categorizedcourses['passed']   = array();
         $categorizedcourses['teaching'] = array();
         $categorizedcourses['upcoming'] = array();
+        $categorizedcourses['ongoing']  = array();
+        $categorizedcourses['passed']   = array();
 
         $passedcourseids = array();
 
@@ -86,7 +85,7 @@ class block_my_courses extends block_base {
             curl_close($ch);
 
             if ($curlheader['http_code'] == 200) {
-                // Do something with the received data here
+                // Parse fetched data, extract ID's of passed courses
                 $passedcourses = json_decode($curlcontents);
 
                 foreach ($passedcourses as $passedcourse) {
@@ -126,33 +125,27 @@ class block_my_courses extends block_base {
                 foreach ($teachingroles as $tr) {
                     if (!strcmp($r->shortname, $tr->shortname) && count($roles) == 1) {
                         // This user is a teacher in this course, but no student
-                        $categorizedcourses['teaching'][] = $course;
-                        unset($ongoingcourses[$course->id]);
+                        $categorizedcourses['teaching'][$course->id] = $course;
+                        break 2;
 
                     } else if (!strcmp($r->shortname, $tr->shortname)) {
-                        // This user is both a teacher and a student in this course!
-                        $categorizedcourses['teaching'][] = $course;
+                        // This user is probably both a teacher and a student in this course!
+                        $categorizedcourses['teaching'][$course->id] = $course;
                     }
                 }
             }
 
             if ($hasidnumber && in_array($courseid, $passedcourseids)) {
-                // This is a passed course. Remove it from $ongoingcourses
-                $categorizedcourses['passed'][] = $course;
-                unset($ongoingcourses[$course->id]);
+                // This is a passed course
+                $categorizedcourses['passed'][$course->id] = $course;
+
+            } else if ($activeoncourse) {
+                // This course is ongoing
+                $categorizedcourses['ongoing'][$course->id] = $course;
 
             } else if (!$activeoncourse) {
-                // This course is upcoming. Remove it from $ongoingcourses
-                $categorizedcourses['upcoming'][] = $course;
-                unset($ongoingcourses[$course->id]);
-            }
-        }
-
-        foreach ($ongoingcourses as $c) {
-            if (isset($USER->lastcourseaccess[$c->id])) {
-                $ongoingcourses[$c->id]->lastaccess = $USER->lastcourseaccess[$c->id];
-            } else {
-                $ongoingcourses[$c->id]->lastaccess = 0;
+                // This course is upcoming
+                $categorizedcourses['upcoming'][$course->id] = $course;
             }
         }
 
@@ -176,10 +169,10 @@ class block_my_courses extends block_base {
 
             $nocoursesprinted = false;
         }
-        if (!empty($ongoingcourses)) {
+        if (!empty($categorizedcourses['ongoing'])) {
             // Ongoing courses
             ob_start();
-            print_overview($ongoingcourses);
+            print_overview($categorizedcourses['ongoing']);
             $ongoingcontent[] = ob_get_contents();
             ob_end_clean();
 
