@@ -88,8 +88,10 @@ class block_my_courses extends block_base {
 
             $passedcourses = $this->api_call($params);
 
-            foreach ($passedcourses as $course) {
-                $passedcourseids[] = $course->id;
+            if (!empty($passedcourses)) {
+                foreach ($passedcourses as $course) {
+                    $passedcourseids[] = $course->id;
+                }
             }
         }
 
@@ -156,10 +158,12 @@ class block_my_courses extends block_base {
                 $params[] = $course->idnumber;
 
                 $result = $this->api_call($params);
-                if (strtotime($result->endDate) < time()) {
-                    // This course is passed
-                    $categorizedcourses['teaching']['passed'][$course->id] = $course;
-                    unset($categorizedcourses['teaching']['ongoing'][$course->id]);
+                if (!empty($result)) {
+                    if (strtotime($result->endDate) < time()) {
+                        // This course is passed
+                        $categorizedcourses['teaching']['passed'][$course->id] = $course;
+                        unset($categorizedcourses['teaching']['ongoing'][$course->id]);
+                    }
                 }
             }
         }
@@ -273,13 +277,12 @@ class block_my_courses extends block_base {
             return json_decode($curlcontents);
 
         } else {
-            // Create and show an error message
-            $error = new stdClass;
-            $error->httpcode = $curlheader['http_code'];
-            $error->path     = implode('/', $params);
+            // Show error
             echo '<pre>';
             echo get_string('servererror', 'block_my_courses')."\n";
-            echo $error ."\n";
+            echo get_string('curl_contents', 'block_my_courses')."\n";
+            echo $curlcontents.':'."\n";
+            echo 'Path: '.$apiurl.implode('/', $params);
             echo '</pre>';
         }
     }
