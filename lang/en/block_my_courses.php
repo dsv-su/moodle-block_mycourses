@@ -2,7 +2,7 @@
 $string['apiuser'] = 'API user';
 $string['apikey'] = 'API key';
 $string['coursestarts'] = 'This course starts';
-$string['curl_contents'] = 'Contents of curl request';
+$string['curl_header'] = 'Curl header';
 $string['nocourses'] = 'No courses to display';
 $string['ongoingcourses'] = 'Ongoing';
 $string['taking_header'] = 'Studying courses';

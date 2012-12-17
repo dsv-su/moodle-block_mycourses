@@ -280,8 +280,11 @@ class block_my_courses extends block_base {
             // Show error
             echo '<pre>';
             echo get_string('servererror', 'block_my_courses')."\n";
-            echo get_string('curl_contents', 'block_my_courses')."\n";
-            echo $curlcontents.':'."\n";
+            if (!empty($curlheader['http_code'])) {
+                echo get_string('curl_header', 'block_my_courses');
+                echo ':'."\n";
+                echo $curlheader['http_code']."\n";
+            }
             echo 'Path: '.$apiurl.implode('/', $params);
             echo '</pre>';
         }
