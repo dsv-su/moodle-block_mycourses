@@ -109,31 +109,43 @@ class block_my_courses extends block_base {
             }
         }
 
-        // Get the different teaching roles
+        // Get the different roles
         $teachingroles = array_merge(get_archetype_roles('teacher'), get_archetype_roles('editingteacher'));
+        $studentroles = get_archetype_roles('student');
+
+        function extractshortname($roles) {
+            $shortnames = array();
+            foreach ($roles as $r) {
+                $shortnames[] = $r->shortname;
+            }
+            return $shortnames;
+        }
+
+        $teachingroles = extractshortname($teachingroles);
+        $studentroles  = extractshortname($studentroles);
 
         // Sort courses
         foreach ($allcourses as $course) {
             $instance = context::instance_by_id($course->ctxid);
             $activeoncourse = is_enrolled($instance, NULL, '', true);
-            $isteacher = false;
             $courseid = $course->idnumber;
             $context = get_context_instance(CONTEXT_COURSE, $course->id);
-            $roles = get_user_roles($context, $USER->id);
+            $roles = extractshortname(get_user_roles($context, $USER->id));
 
             // See if the user is a teacher in this course, take appropriate action...
-            foreach ($roles as $r) {
-                foreach ($teachingroles as $tr) {
-                    if (!strcmp($r->shortname, $tr->shortname) && count($roles) == 1) {
-                        // This user is a teacher in this course, but not a student
-                        $categorizedcourses['teaching'][$course->id] = $course;
-                        $isteacher = true;
-                        break 2;
 
-                    } else if (!strcmp($r->shortname, $tr->shortname)) {
-                        // This user is probably both a teacher and a student in this course!
-                        $categorizedcourses['teaching'][$course->id] = $course;
-                    }
+            foreach ($roles as $r) {
+                if (in_array($r, $studentroles) && count($roles) == 1) {
+                    break;
+                } else if (in_array($r, $teachingroles) && count($roles) == 1) {
+                    $categorizedcourses['teaching'][$course->id] = $course;
+                    continue 2;
+                } else if (!in_array($r, $studentroles) && in_array($r->shortname, $teachingroles)) {
+                    $categorizedcourses['teaching'][$course->id] = $course;
+                    continue 2;
+                } else if (in_array($r, $teachingroles)) {
+                    $categorizedcourses['teaching'][$course->id] = $course;
+                    break;
                 }
             }
 
@@ -141,7 +153,7 @@ class block_my_courses extends block_base {
                 // This is a passed course
                 $categorizedcourses['passed'][$course->id] = $course;
 
-            } else if ($activeoncourse && !$isteacher) {
+            } else if ($activeoncourse) {
                 // This course is ongoing
                 $categorizedcourses['ongoing'][$course->id] = $course;
 
