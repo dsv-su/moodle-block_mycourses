@@ -277,7 +277,10 @@ class block_my_courses extends block_base {
             $error = new stdClass;
             $error->httpcode = $curlheader['http_code'];
             $error->path     = implode('/', $params);
-            echo get_string('servererror', 'block_my_courses', $error)."\n";
+            echo '<pre>';
+            echo get_string('servererror', 'block_my_courses')."\n";
+            echo $error ."\n";
+            echo '</pre>';
         }
     }
 
