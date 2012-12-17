@@ -51,11 +51,24 @@ class block_my_courses extends block_base {
         $allcourses = enrol_get_users_courses($USER->id, false, 'id, shortname, modinfo,
                 sectioncache', 'visible DESC,sortorder ASC');
 
+        foreach ($allcourses as $c) {
+            if (isset($USER->lastcourseaccess[$c->id])) {
+                $allcourses[$c->id]->lastaccess = $USER->lastcourseaccess[$c->id];
+            } else {
+                $allcourses[$c->id]->lastaccess = 0;
+            }
+        }
+
         $categorizedcourses = array();
+
         $categorizedcourses['teaching'] = array();
-        $categorizedcourses['upcoming'] = array();
-        $categorizedcourses['ongoing']  = array();
-        $categorizedcourses['passed']   = array();
+        $categorizedcourses['teaching']['ongoing'] = array();
+        $categorizedcourses['teaching']['passed']  = array();
+
+        $categorizedcourses['taking'] = array();
+        $categorizedcourses['taking']['upcoming'] = array();
+        $categorizedcourses['taking']['ongoing']  = array();
+        $categorizedcourses['taking']['passed']   = array();
 
         $passedcourseids = array();
 
@@ -66,46 +79,17 @@ class block_my_courses extends block_base {
             $hasidnumber = true;
 
             // Get passed courses
-            $apiurl     = 'https://api.dsv.su.se/';
-            $username   = get_config('block_my_courses', 'api_user');
-            $password   = get_config('block_my_courses', 'api_key');
             $params     = array();
             $params[]   = 'rest';
             $params[]   = 'person';
             $params[]   = $USER->idnumber;
             $params[]   = 'courseSegmentInstances';
             $params[]   = '?onlyPassed=true';
-            $ch         = curl_init();
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-            curl_setopt($ch, CURLOPT_USERPWD, $username.':'.$password);
-            curl_setopt($ch, CURLOPT_HTTPHEADER, array('Accept: application/json'));
-            curl_setopt($ch, CURLOPT_URL, $apiurl.implode('/', $params));
-            $curlcontents = curl_exec($ch);
-            $curlheader  = curl_getinfo($ch);
-            curl_close($ch);
 
-            if ($curlheader['http_code'] == 200) {
-                // Parse fetched data, extract ID's of passed courses
-                $passedcourses = json_decode($curlcontents);
+            $passedcourses = $this->api_call($params);
 
-                foreach ($passedcourses as $passedcourse) {
-                    $passedcourseids[] = $passedcourse->id;
-                }
-
-            } else {
-                // Create and show an error message
-                $error = new stdClass;
-                $error->httpcode = $curlheader['http_code'];
-                $error->path     = implode('/', $params);
-                echo get_string('servererror', 'block_my_courses', $error)."\n";
-            }
-        }
-
-        foreach ($allcourses as $c) {
-            if (isset($USER->lastcourseaccess[$c->id])) {
-                $allcourses[$c->id]->lastaccess = $USER->lastcourseaccess[$c->id];
-            } else {
-                $allcourses[$c->id]->lastaccess = 0;
+            foreach ($passedcourses as $course) {
+                $passedcourseids[] = $course->id;
             }
         }
 
@@ -138,72 +122,128 @@ class block_my_courses extends block_base {
                 if (in_array($r, $studentroles) && count($roles) == 1) {
                     break;
                 } else if (in_array($r, $teachingroles) && count($roles) == 1) {
-                    $categorizedcourses['teaching'][$course->id] = $course;
+                    $categorizedcourses['teaching']['ongoing'][$course->id] = $course;
                     continue 2;
                 } else if (!in_array($r, $studentroles) && in_array($r, $teachingroles)) {
-                    $categorizedcourses['teaching'][$course->id] = $course;
+                    $categorizedcourses['teaching']['ongoing'][$course->id] = $course;
                     continue 2;
                 } else if (in_array($r, $teachingroles)) {
-                    $categorizedcourses['teaching'][$course->id] = $course;
+                    $categorizedcourses['teaching']['ongoing'][$course->id] = $course;
                     break;
                 }
             }
 
             if ($hasidnumber && in_array($courseid, $passedcourseids)) {
                 // This is a passed course
-                $categorizedcourses['passed'][$course->id] = $course;
+                $categorizedcourses['taking']['passed'][$course->id] = $course;
 
             } else if ($activeoncourse) {
                 // This course is ongoing
-                $categorizedcourses['ongoing'][$course->id] = $course;
+                $categorizedcourses['taking']['ongoing'][$course->id] = $course;
 
             } else if (!$activeoncourse) {
                 // This course is upcoming
-                $categorizedcourses['upcoming'][$course->id] = $course;
+                $categorizedcourses['taking']['upcoming'][$course->id] = $course;
+            }
+        }
+
+        // Get passed teaching courses
+        foreach ($categorizedcourses['teaching']['ongoing'] as $course) {
+            if (!empty($course->idnumber)) {
+                $params = array();
+                $params[] = 'rest';
+                $params[] = 'courseSegment';
+                $params[] = $course->idnumber;
+
+                $result = $this->api_call($params);
+                if (strtotime($result->endDate) < time()) {
+                    // This course is passed
+                    $categorizedcourses['teaching']['passed'][$course->id] = $course;
+                    unset($categorizedcourses['teaching']['ongoing'][$course->id]);
+                }
             }
         }
 
         // Print courses
         require_once $CFG->dirroot."/course/lib.php";
-        if (!empty($categorizedcourses['teaching'])) {
-            // Teaching courses
-            $this->content->text.=html_writer::tag('h2', get_string('teachingcourses', 'block_my_courses'));
-            ob_start();
-            print_overview($categorizedcourses['teaching']);
-            $teachingcontent[] = ob_get_contents();
-            ob_end_clean();
-            $this->content->text.=implode($teachingcontent);
-        }
-
         $nocoursesprinted = true;
-        if (!empty($categorizedcourses['upcoming'])) {
+        $teachingheaderprinted = false;
+        if (!empty($categorizedcourses['teaching']['ongoing'])) {
+            // Teaching courses (ongoing)
+            if (!$teachingheaderprinted) {
+                $this->content->text.=html_writer::tag('h2', get_string('teaching_header', 'block_my_courses'));
+                $teachingheaderprinted = true;
+            }
+            $this->content->text.=html_writer::tag('h3', get_string('ongoingcourses', 'block_my_courses'));
+            ob_start();
+            print_overview($categorizedcourses['teaching']['ongoing']);
+            $content = array();
+            $content[] = ob_get_contents();
+            ob_end_clean();
+            $this->content->text.=implode($content);
+
+            $nocoursesprinted = false;
+        }
+        if (!empty($categorizedcourses['teaching']['passed'])) {
+            // Teaching courses (passed)
+            if (!$teachingheaderprinted) {
+                $this->content->text.=html_writer::tag('h2', get_string('teaching_header', 'block_my_courses'));
+                $teachingheaderprinted = true;
+            }
+            $this->content->text.=html_writer::tag('h3', get_string('passedcourses', 'block_my_courses'));
+            ob_start();
+            print_overview($categorizedcourses['teaching']['passed']);
+            $content = array();
+            $content[] = ob_get_contents();
+            ob_end_clean();
+            $this->content->text.=implode($content);
+
+            $nocoursesprinted = false;
+        }
+
+        $takingheaderprinted = false;
+        if (!empty($categorizedcourses['taking']['upcoming'])) {
             // Upcoming courses
-            $this->content->text.=html_writer::tag('h2', get_string('upcomingcourses', 'block_my_courses'));
-            $this->content->text.=$this->print_overview_starttime($categorizedcourses['upcoming']);
+            if (!$takingheaderprinted) {
+                $this->content->text.=html_writer::tag('h2', get_string('taking_header', 'block_my_courses'));
+                $takingheaderprinted = true;
+            }
+            $this->content->text.=html_writer::tag('h3', get_string('upcomingcourses', 'block_my_courses'));
+            $this->content->text.=$this->print_overview_starttime($categorizedcourses['taking']['upcoming']);
 
             $nocoursesprinted = false;
         }
-        if (!empty($categorizedcourses['ongoing'])) {
+        if (!empty($categorizedcourses['taking']['ongoing'])) {
             // Ongoing courses
+            if (!$takingheaderprinted) {
+                $this->content->text.=html_writer::tag('h2', get_string('taking_header', 'block_my_courses'));
+                $takingheaderprinted = true;
+            }
             ob_start();
-            print_overview($categorizedcourses['ongoing']);
-            $ongoingcontent[] = ob_get_contents();
+            print_overview($categorizedcourses['taking']['ongoing']);
+            $content = array();
+            $content[] = ob_get_contents();
             ob_end_clean();
 
-            $this->content->text.=html_writer::tag('h2', get_string('ongoingcourses', 'block_my_courses'));
-            $this->content->text.=implode($ongoingcontent);
+            $this->content->text.=html_writer::tag('h3', get_string('ongoingcourses', 'block_my_courses'));
+            $this->content->text.=implode($content);
 
             $nocoursesprinted = false;
         }
-        if ($hasidnumber && !empty($categorizedcourses['passed'])) {
+        if ($hasidnumber && !empty($categorizedcourses['taking']['passed'])) {
             // Passed courses (if user has idnumber)
+            if (!$takingheaderprinted) {
+                $this->content->text.=html_writer::tag('h2', get_string('taking_header', 'block_my_courses'));
+                $takingheaderprinted = true;
+            }
             ob_start();
-            print_overview($categorizedcourses['passed']);
-            $passedcontent[] = ob_get_contents();
+            print_overview($categorizedcourses['taking']['passed']);
+            $content = array();
+            $content[] = ob_get_contents();
             ob_end_clean();
 
-            $this->content->text.=html_writer::tag('h2', get_string('passedcourses', 'block_my_courses'));
-            $this->content->text.=implode($passedcontent);
+            $this->content->text.=html_writer::tag('h3', get_string('passedcourses', 'block_my_courses'));
+            $this->content->text.=implode($content);
 
             $nocoursesprinted = false;
         }
@@ -212,6 +252,33 @@ class block_my_courses extends block_base {
         }
 
         return $this->content;
+    }
+
+    private function api_call(array $params) {
+        $apiurl   = 'https://api.dsv.su.se/';
+        $username = get_config('block_my_courses', 'api_user');
+        $password = get_config('block_my_courses', 'api_key');
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_USERPWD, $username.':'.$password);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Accept: application/json'));
+        curl_setopt($ch, CURLOPT_URL, $apiurl.implode('/', $params));
+        $curlcontents = curl_exec($ch);
+        $curlheader  = curl_getinfo($ch);
+        curl_close($ch);
+
+        if ($curlheader['http_code'] == 200) {
+            // Return fetched data
+            return json_decode($curlcontents);
+
+        } else {
+            // Create and show an error message
+            $error = new stdClass;
+            $error->httpcode = $curlheader['http_code'];
+            $error->path     = implode('/', $params);
+            echo get_string('servererror', 'block_my_courses', $error)."\n";
+        }
     }
 
     public function print_overview_starttime($courses) {
