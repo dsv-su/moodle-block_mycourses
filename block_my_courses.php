@@ -116,6 +116,7 @@ class block_my_courses extends block_base {
         foreach ($allcourses as $course) {
             $instance = context::instance_by_id($course->ctxid);
             $activeoncourse = is_enrolled($instance, NULL, '', true);
+            $isteacher = false;
             $courseid = $course->idnumber;
             $context = get_context_instance(CONTEXT_COURSE, $course->id);
             $roles = get_user_roles($context, $USER->id);
@@ -124,8 +125,9 @@ class block_my_courses extends block_base {
             foreach ($roles as $r) {
                 foreach ($teachingroles as $tr) {
                     if (!strcmp($r->shortname, $tr->shortname) && count($roles) == 1) {
-                        // This user is a teacher in this course, but no student
+                        // This user is a teacher in this course, but not a student
                         $categorizedcourses['teaching'][$course->id] = $course;
+                        $isteacher = true;
                         break 2;
 
                     } else if (!strcmp($r->shortname, $tr->shortname)) {
@@ -139,7 +141,7 @@ class block_my_courses extends block_base {
                 // This is a passed course
                 $categorizedcourses['passed'][$course->id] = $course;
 
-            } else if ($activeoncourse) {
+            } else if ($activeoncourse && !$isteacher) {
                 // This course is ongoing
                 $categorizedcourses['ongoing'][$course->id] = $course;
 
