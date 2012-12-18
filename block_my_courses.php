@@ -63,7 +63,7 @@ class block_my_courses extends block_base {
 
         $categorizedcourses['teaching'] = array();
         $categorizedcourses['teaching']['ongoing'] = array();
-        $categorizedcourses['teaching']['passed']  = array();
+        $categorizedcourses['teaching']['finished']  = array();
 
         $categorizedcourses['taking'] = array();
         $categorizedcourses['taking']['upcoming'] = array();
@@ -114,43 +114,42 @@ class block_my_courses extends block_base {
         foreach ($allcourses as $course) {
             $instance = context::instance_by_id($course->ctxid);
             $activeoncourse = is_enrolled($instance, NULL, '', true);
-            $courseid = $course->idnumber;
             $context = get_context_instance(CONTEXT_COURSE, $course->id);
             $roles = extractshortname(get_user_roles($context, $USER->id));
 
             // See if the user is a teacher in this course, take appropriate action...
-
             foreach ($roles as $r) {
                 if (in_array($r, $studentroles) && count($roles) == 1) {
+                    // User is only a student in this course
                     break;
-                } else if (in_array($r, $teachingroles) && count($roles) == 1) {
-                    $categorizedcourses['teaching']['ongoing'][$course->id] = $course;
-                    continue 2;
                 } else if (!in_array($r, $studentroles) && in_array($r, $teachingroles)) {
+                    // User is only a teacher in this course, we can skip all further checks
                     $categorizedcourses['teaching']['ongoing'][$course->id] = $course;
                     continue 2;
                 } else if (in_array($r, $teachingroles)) {
+                    // User is probably both a teacher and a student, we need to run the student checks as well
                     $categorizedcourses['teaching']['ongoing'][$course->id] = $course;
                     break;
                 }
             }
 
-            if ($hasidnumber && in_array($courseid, $passedcourseids)) {
-                // This is a passed course
+            if ($hasidnumber && in_array($course->idnumber, $passedcourseids)) {
+                // This is a passed taken course
                 $categorizedcourses['taking']['passed'][$course->id] = $course;
 
             } else if ($activeoncourse) {
-                // This course is ongoing
+                // This course is currently ongoing (enrolled as student)
                 $categorizedcourses['taking']['ongoing'][$course->id] = $course;
 
             } else if (!$activeoncourse) {
-                // This course is upcoming
+                // This course is upcoming (enrolled as student)
                 $categorizedcourses['taking']['upcoming'][$course->id] = $course;
             }
         }
 
         // Sort passed teaching courses
         foreach ($categorizedcourses['teaching']['ongoing'] as $course) {
+            // Get course data from API
             if (!empty($course->idnumber)) {
                 $result = array();
 
@@ -163,6 +162,7 @@ class block_my_courses extends block_base {
                     $result[] = $this->api_call($params);
                 }
 
+                // Check course endDate, if it's less than time() - the course is finished
                 if (!empty($result)) {
                     $bestmatch = current($result);
                     foreach ($result as $r) {
@@ -174,7 +174,7 @@ class block_my_courses extends block_base {
 
                     if (strtotime($bestmatch->endDate) < time()) {
                         // This is a passed course
-                        $categorizedcourses['teaching']['passed'][$course->id] = $course;
+                        $categorizedcourses['teaching']['finished'][$course->id] = $course;
                         unset($categorizedcourses['teaching']['ongoing'][$course->id]);
                     }
                 }
@@ -186,7 +186,6 @@ class block_my_courses extends block_base {
         $nocoursesprinted = true;
         $teachingheaderprinted = false;
         if (!empty($categorizedcourses['teaching']['ongoing'])) {
-            // Teaching courses (ongoing)
             if (!$teachingheaderprinted) {
                 $this->content->text.=html_writer::tag('h2', get_string('teaching_header', 'block_my_courses'));
                 $teachingheaderprinted = true;
@@ -201,15 +200,14 @@ class block_my_courses extends block_base {
 
             $nocoursesprinted = false;
         }
-        if (!empty($categorizedcourses['teaching']['passed'])) {
-            // Teaching courses (passed)
+        if (!empty($categorizedcourses['teaching']['finished'])) {
             if (!$teachingheaderprinted) {
                 $this->content->text.=html_writer::tag('h2', get_string('teaching_header', 'block_my_courses'));
                 $teachingheaderprinted = true;
             }
-            $this->content->text.=html_writer::tag('h3', get_string('passedcourses', 'block_my_courses'));
+            $this->content->text.=html_writer::tag('h3', get_string('finishedcourses', 'block_my_courses'));
             ob_start();
-            print_overview($categorizedcourses['teaching']['passed']);
+            print_overview($categorizedcourses['teaching']['finished']);
             $content = array();
             $content[] = ob_get_contents();
             ob_end_clean();
@@ -220,7 +218,6 @@ class block_my_courses extends block_base {
 
         $takingheaderprinted = false;
         if (!empty($categorizedcourses['taking']['upcoming'])) {
-            // Upcoming courses
             if (!$takingheaderprinted) {
                 $this->content->text.=html_writer::tag('h2', get_string('taking_header', 'block_my_courses'));
                 $takingheaderprinted = true;
@@ -231,7 +228,6 @@ class block_my_courses extends block_base {
             $nocoursesprinted = false;
         }
         if (!empty($categorizedcourses['taking']['ongoing'])) {
-            // Ongoing courses
             if (!$takingheaderprinted) {
                 $this->content->text.=html_writer::tag('h2', get_string('taking_header', 'block_my_courses'));
                 $takingheaderprinted = true;
@@ -248,7 +244,6 @@ class block_my_courses extends block_base {
             $nocoursesprinted = false;
         }
         if ($hasidnumber && !empty($categorizedcourses['taking']['passed'])) {
-            // Passed courses (if user has idnumber)
             if (!$takingheaderprinted) {
                 $this->content->text.=html_writer::tag('h2', get_string('taking_header', 'block_my_courses'));
                 $takingheaderprinted = true;
@@ -295,10 +290,10 @@ class block_my_courses extends block_base {
             echo get_string('servererror', 'block_my_courses')."\n";
             if (!empty($curlheader['http_code'])) {
                 echo get_string('curl_header', 'block_my_courses');
-                echo ':'."\n";
+                echo ':';
                 echo $curlheader['http_code']."\n";
             }
-            echo 'Path: '.$apiurl.implode('/', $params);
+            echo 'URL: '.$apiurl.implode('/', $params);
             echo '</pre>';
         }
     }
@@ -308,12 +303,11 @@ class block_my_courses extends block_base {
 
         // Collect course id's
         $courseids = array();
-
         foreach ($courses as $course) {
             $courseids[] = $course->id;
         }
 
-        // Super awesome SQL. You may touch my shoulder.
+        // Super awesome SQL
         $sql = "SELECT userid, courseid, timestart
                 FROM mdl_user_enrolments ue
                 INNER JOIN mdl_enrol e
@@ -321,24 +315,21 @@ class block_my_courses extends block_base {
                 WHERE userid = ? AND courseid IN ( ? )";
 
         // Get starting times from the database
-        $sqlobject = array();
-        $sqlobject = $DB->get_records_sql($sql, array($USER->id, implode(',', $courseids)));
+        $sqlobjects = array();
+        $sqlobjects = $DB->get_records_sql($sql, array($USER->id, implode(',', $courseids)));
 
         // Collect starting times from data gathered from database
         $starttimes = array();
-        foreach ($sqlobject as $course) {
+        foreach ($sqlobjects as $course) {
             $starttimes[$course->courseid] = $course->timestart;
         }
 
         // Loop over each course, create html code and append to 'result'
         $result = '';
         foreach ($courses as $course) {
-            // Get course start time
-            $coursestart = $starttimes[$course->id];
-
             // Format and append time that this course starts
             $formattedstart = get_string('coursestarts', 'block_my_courses').': ';
-            $formattedstart .= date('d M Y', $coursestart);
+            $formattedstart .= date('d M Y', $starttimes[$course->id]);
 
             $result .= $OUTPUT->box_start('coursebox');
             $result .= $OUTPUT->container(html_writer::tag('h3', $course->fullname));
