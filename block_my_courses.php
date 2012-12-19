@@ -305,15 +305,14 @@ class block_my_courses extends block_base {
         global $PAGE;
 
         $PAGE->requires->js('/blocks/my_courses/collapse.js');
-
-        $javascript = 'javascript:toggle(\'cc'.$content.'\',\'ch'.$header.'\');';
+        $javascript = 'javascript:toggle(\'cc'.trim($header, '\'').'\',\'ch'.trim($header, '\'').'\');';
 
         $contentdisplay = '';
         if ($ongoing) {
-            $collapsablelist = html_writer::start_tag('div', array('id' => 'ch'.$header, 'class' => 'c_header expanded', 'onclick' => $javascript));
+            $collapsablelist = html_writer::start_tag('div', array('id' => 'ch'.trim($header, '\''), 'class' => 'c_header expanded', 'onclick' => $javascript));
             $contentdisplay = 'display:block;';
         } else {
-            $collapsablelist = html_writer::start_tag('div', array('id' => 'ch'.$header, 'class' => 'c_header collapsed', 'onclick' => $javascript));
+            $collapsablelist = html_writer::start_tag('div', array('id' => 'ch'.trim($header, '\''), 'class' => 'c_header collapsed', 'onclick' => $javascript));
             $contentdisplay = 'display:none;';
         }
 
@@ -324,7 +323,7 @@ class block_my_courses extends block_base {
         $collapsablelist .= html_writer::end_tag('ul');
         $collapsablelist .= html_writer::end_tag('div');
 
-        $collapsablelist .= html_writer::start_tag('div', array('id' => 'cc'.$content, 'class' => 'c_content', 'style' => $contentdisplay));
+        $collapsablelist .= html_writer::start_tag('div', array('id' => 'cc'.$header, 'class' => 'c_content', 'style' => $contentdisplay));
         $collapsablelist .= $content;
         $collapsablelist .= html_writer::end_tag('div');
 
