@@ -305,14 +305,16 @@ class block_my_courses extends block_base {
         global $PAGE;
 
         $PAGE->requires->js('/blocks/my_courses/collapse.js');
-        $javascript = 'javascript:toggle(\'cc'.trim($header, '\'').'\',\'ch'.trim($header, '\'').'\');';
+        $javascript = 'javascript:toggle(\'cc'.str_replace(array('\'', '\"'), '', $header).'\',\'ch'.$header.'\');';
 
         $contentdisplay = '';
         if ($ongoing) {
-            $collapsablelist = html_writer::start_tag('div', array('id' => 'ch'.trim($header, '\''), 'class' => 'c_header expanded', 'onclick' => $javascript));
+            $collapsablelist = html_writer::start_tag('div',
+                    array('id' => 'ch'.$header, 'class' => 'c_header expanded', 'onclick' => $javascript));
             $contentdisplay = 'display:block;';
         } else {
-            $collapsablelist = html_writer::start_tag('div', array('id' => 'ch'.trim($header, '\''), 'class' => 'c_header collapsed', 'onclick' => $javascript));
+            $collapsablelist = html_writer::start_tag('div',
+                    array('id' => 'ch'.$header, 'class' => 'c_header collapsed', 'onclick' => $javascript));
             $contentdisplay = 'display:none;';
         }
 
