@@ -196,7 +196,7 @@ class block_my_courses extends block_base {
             $content[] = ob_get_contents();
             ob_end_clean();
             $this->content->text.=$this->create_collapsable_list(
-                    get_string('ongoingcourses', 'block_my_courses'), implode($content), true);
+                    get_string('ongoingcourses', 'block_my_courses'), implode($content), true, true);
 
             $nocoursesprinted = false;
         }
@@ -211,7 +211,7 @@ class block_my_courses extends block_base {
             $content[] = ob_get_contents();
             ob_end_clean();
             $this->content->text.=$this->create_collapsable_list(
-                    get_string('finishedcourses', 'block_my_courses'), implode($content));
+                    get_string('finishedcourses', 'block_my_courses'), implode($content), false, true);
 
             $nocoursesprinted = false;
         }
@@ -301,20 +301,33 @@ class block_my_courses extends block_base {
         }
     }
 
-    private function create_collapsable_list($header, $content, $ongoing = false) {
+    private function create_collapsable_list($header, $content, $ongoing = false, $teaching = false) {
         global $PAGE;
 
         $PAGE->requires->js('/blocks/my_courses/collapse.js');
-        $javascript = 'javascript:toggle(\'cc'.str_replace(array('\'', '\"'), '', $header).'\',\'ch'.$header.'\');';
+        $javascript = "";
+        if ($teaching) {
+            $javascript = 'javascript:toggle(\'cc'.str_replace(array('\'', '\"'), '', $header).'\',\'chTeaching'.$header.'\');';
+        } else {
+            $javascript = 'javascript:toggle(\'cc'.str_replace(array('\'', '\"'), '', $header).'\',\'chTaking'.$header.'\');';
+        }
 
-        $contentdisplay = '';
-        if ($ongoing) {
+        $contentdisplay = "";
+        if ($teaching && $ongoing) {
             $collapsablelist = html_writer::start_tag('div',
-                    array('id' => 'ch'.$header, 'class' => 'c_header expanded', 'onclick' => $javascript));
+                    array('id' => 'chTeaching'.$header, 'class' => 'c_header expanded', 'onclick' => $javascript));
+            $contentdisplay = 'display:block;';
+        } else if ($teaching) {
+            $collapsablelist = html_writer::start_tag('div',
+                    array('id' => 'chTeaching'.$header, 'class' => 'c_header collapsed', 'onclick' => $javascript));
+            $contentdisplay = 'display:none;';
+        } else if ($ongoing) {
+            $collapsablelist = html_writer::start_tag('div',
+                    array('id' => 'chTaking'.$header, 'class' => 'c_header expanded', 'onclick' => $javascript));
             $contentdisplay = 'display:block;';
         } else {
             $collapsablelist = html_writer::start_tag('div',
-                    array('id' => 'ch'.$header, 'class' => 'c_header collapsed', 'onclick' => $javascript));
+                    array('id' => 'chTaking'.$header, 'class' => 'c_header collapsed', 'onclick' => $javascript));
             $contentdisplay = 'display:none;';
         }
 
