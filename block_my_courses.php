@@ -338,7 +338,12 @@ class block_my_courses extends block_base {
         $collapsablelist .= html_writer::end_tag('ul');
         $collapsablelist .= html_writer::end_tag('div');
 
-        $collapsablelist .= html_writer::start_tag('div', array('id' => 'cc'.$header, 'class' => 'c_content', 'style' => $contentdisplay));
+        if ($teaching) {
+            $collapsablelist .= html_writer::start_tag('div', array('id' => 'ccTeaching'.$header, 'class' => 'c_content', 'style' => $contentdisplay));
+        } else {
+            $collapsablelist .= html_writer::start_tag('div', array('id' => 'ccTaking'.$header, 'class' => 'c_content', 'style' => $contentdisplay));
+        }
+
         $collapsablelist .= $content;
         $collapsablelist .= html_writer::end_tag('div');
 
