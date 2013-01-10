@@ -307,9 +307,9 @@ class block_my_courses extends block_base {
         $PAGE->requires->js('/blocks/my_courses/collapse.js');
         $javascript = "";
         if ($teaching) {
-            $javascript = 'javascript:toggle(\'cc'.str_replace(array('\'', '\"'), '', $header).'\',\'chTeaching'.$header.'\');';
+            $javascript = 'javascript:toggle(\'ccTeaching'.str_replace(array('\'', '\"'), '', $header).'\',\'chTeaching'.$header.'\');';
         } else {
-            $javascript = 'javascript:toggle(\'cc'.str_replace(array('\'', '\"'), '', $header).'\',\'chTaking'.$header.'\');';
+            $javascript = 'javascript:toggle(\'ccTaking'.str_replace(array('\'', '\"'), '', $header).'\',\'chTaking'.$header.'\');';
         }
 
         $contentdisplay = "";
