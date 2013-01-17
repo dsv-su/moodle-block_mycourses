@@ -384,7 +384,7 @@ class block_my_courses extends block_base {
             $formattedstart .= date('d M Y', $starttimes[$course->id]);
 
             $result .= $OUTPUT->box_start('coursebox');
-            $result .= $OUTPUT->container(html_writer::tag('h3', $course->fullname));
+            $result .= $OUTPUT->container(html_writer::tag('h3', $course->fullname, array('class' => 'main')));
             $result .= $OUTPUT->container(html_writer::tag('div', $formattedstart, array('class' => 'upcoming_course_content')));
             $result .= $OUTPUT->box_end();
         }
@@ -398,7 +398,7 @@ class block_my_courses extends block_base {
      * @return boolean
      */
     public function has_config() {
-        return false;
+        return true;
     }
 
     /**
