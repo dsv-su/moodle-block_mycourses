@@ -87,7 +87,7 @@ class block_my_courses extends block_base {
             $params[]   = 'courseSegmentInstances';
             $params[]   = '?onlyPassed=true';
 
-            $passedcourses = api_call($params);
+            $passedcourses = block_my_courses_api_call($params);
 
             if (!empty($passedcourses)) {
                 foreach ($passedcourses as $course) {
@@ -160,7 +160,7 @@ class block_my_courses extends block_base {
                     $params[] = 'rest';
                     $params[] = 'courseSegment';
                     $params[] = $id;
-                    $result[] = api_call($params);
+                    $result[] = block_my_courses_api_call($params);
                 }
 
                 // Check course endDate, if it's less than time() - the course is finished
@@ -183,7 +183,6 @@ class block_my_courses extends block_base {
         }
 
         // Print courses
-        require_once $CFG->dirroot."/course/lib.php";
         $nocoursesprinted = true;
         $teachingheaderprinted = false;
         if (!empty($categorizedcourses['teaching']['ongoing'])) {
@@ -191,11 +190,9 @@ class block_my_courses extends block_base {
                 $this->content->text.=html_writer::tag('h2', get_string('teaching_header', 'block_my_courses'));
                 $teachingheaderprinted = true;
             }
-            ob_start();
-            print_overview($categorizedcourses['teaching']['ongoing']);
-            $content = array();
-            $content[] = ob_get_contents();
-            ob_end_clean();
+
+            $content = block_my_courses_get_overviews($categorizedcourses['teaching']['ongoing']);
+
             $this->content->text.=$this->create_collapsable_list(
                     get_string('ongoingcourses', 'block_my_courses'), implode($content), true, true);
 
@@ -206,11 +203,9 @@ class block_my_courses extends block_base {
                 $this->content->text.=html_writer::tag('h2', get_string('teaching_header', 'block_my_courses'));
                 $teachingheaderprinted = true;
             }
-            ob_start();
-            print_overview($categorizedcourses['teaching']['finished']);
-            $content = array();
-            $content[] = ob_get_contents();
-            ob_end_clean();
+
+            $content = block_my_courses_get_overviews($categorizedcourses['teaching']['finished']);
+
             $this->content->text.=$this->create_collapsable_list(
                     get_string('finishedcourses', 'block_my_courses'), implode($content), false, true);
 
@@ -224,7 +219,7 @@ class block_my_courses extends block_base {
                 $takingheaderprinted = true;
             }
             $content = '';
-            $content .= $this->print_overview_starttime($categorizedcourses['taking']['upcoming']);
+            $content .= block_my_courses_get_overviews_starttime($categorizedcourses['taking']['upcoming']);
 
             $this->content->text.=$this->create_collapsable_list(
                     get_string('upcomingcourses', 'block_my_courses'), $content, true);
@@ -236,11 +231,8 @@ class block_my_courses extends block_base {
                 $this->content->text.=html_writer::tag('h2', get_string('taking_header', 'block_my_courses'));
                 $takingheaderprinted = true;
             }
-            ob_start();
-            print_overview($categorizedcourses['taking']['ongoing']);
-            $content = array();
-            $content[] = ob_get_contents();
-            ob_end_clean();
+
+            $content = block_my_courses_get_overviews($categorizedcourses['taking']['ongoing']);
 
             $this->content->text.=$this->create_collapsable_list(
                     get_string('ongoingcourses', 'block_my_courses'), implode($content), true);
@@ -252,11 +244,9 @@ class block_my_courses extends block_base {
                 $this->content->text.=html_writer::tag('h2', get_string('taking_header', 'block_my_courses'));
                 $takingheaderprinted = true;
             }
-            ob_start();
-            print_overview($categorizedcourses['taking']['passed']);
+
             $content = array();
-            $content[] = ob_get_contents();
-            ob_end_clean();
+            $content[] = block_my_courses_get_overviews($categorizedcourses['taking']['passed']);
 
             $this->content->text.=$this->create_collapsable_list(
                     get_string('passedcourses', 'block_my_courses'), implode($content));
