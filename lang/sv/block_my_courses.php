@@ -1,4 +1,5 @@
 <?php
+$string['apiurl'] = 'API-adress';
 $string['apiuser'] = 'API-användare';
 $string['apikey'] = 'API-nyckel';
 $string['coursestarts'] = 'Den här kursen börjar';

@@ -23,7 +23,8 @@
  */
 
 require_once($CFG->dirroot.'/lib/weblib.php');
-require_once($CFG->dirroot . '/lib/formslib.php');
+require_once($CFG->dirroot.'/lib/formslib.php');
+require_once($CFG->dirroot.'/blocks/my_courses/locallib.php');
 
 class block_my_courses extends block_base {
     /**
@@ -86,7 +87,7 @@ class block_my_courses extends block_base {
             $params[]   = 'courseSegmentInstances';
             $params[]   = '?onlyPassed=true';
 
-            $passedcourses = $this->api_call($params);
+            $passedcourses = api_call($params);
 
             if (!empty($passedcourses)) {
                 foreach ($passedcourses as $course) {
@@ -159,7 +160,7 @@ class block_my_courses extends block_base {
                     $params[] = 'rest';
                     $params[] = 'courseSegment';
                     $params[] = $id;
-                    $result[] = $this->api_call($params);
+                    $result[] = api_call($params);
                 }
 
                 // Check course endDate, if it's less than time() - the course is finished
@@ -267,38 +268,6 @@ class block_my_courses extends block_base {
         }
 
         return $this->content;
-    }
-
-    private function api_call(array $params) {
-        $apiurl   = 'https://api.dsv.su.se/';
-        $username = get_config('block_my_courses', 'api_user');
-        $password = get_config('block_my_courses', 'api_key');
-
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_USERPWD, $username.':'.$password);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Accept: application/json'));
-        curl_setopt($ch, CURLOPT_URL, $apiurl.implode('/', $params));
-        $curlcontents = curl_exec($ch);
-        $curlheader  = curl_getinfo($ch);
-        curl_close($ch);
-
-        if ($curlheader['http_code'] == 200) {
-            // Return fetched data
-            return json_decode($curlcontents);
-
-        } else {
-            // Show error
-            echo '<pre>';
-            echo get_string('servererror', 'block_my_courses')."\n";
-            if (!empty($curlheader['http_code'])) {
-                echo get_string('curl_header', 'block_my_courses');
-                echo ':';
-                echo $curlheader['http_code']."\n";
-            }
-            echo 'URL: '.$apiurl.implode('/', $params);
-            echo '</pre>';
-        }
     }
 
     private function create_collapsable_list($header, $content, $ongoing = false, $teaching = false) {

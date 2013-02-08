@@ -1,4 +1,5 @@
 <?php
+$string['apiurl'] = 'API URL';
 $string['apiuser'] = 'API user';
 $string['apikey'] = 'API key';
 $string['coursestarts'] = 'This course starts';

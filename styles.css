@@ -1,36 +1,40 @@
-.c_header {
+.block_my_courses .c_header {
     cursor:pointer;
 }
 
-.c_header h3 {
+.block_my_courses .c_header h3 {
     cursor:pointer;
 }
 
-.c_header ul {
+.block_my_courses .c_header ul {
     margin: 0;
     padding: 0;
 }
 
-.c_header li {
+.block_my_courses .c_header li {
     list-style-type: none;
     list-style: none;
     margin-left: 20px;
 }
 
-.c_header.collapsed ul {
+.block_my_courses .c_header.collapsed ul {
     background-image: url([[pix:t/collapsed]]);
     background-position: 2px 50%;
     background-repeat: no-repeat;
     margin: 0;
 }
 
-.c_header.expanded ul {
+.block_my_courses .c_header.expanded ul {
     background-image: url([[pix:t/expanded]]);
     background-position: 2px 50%;
     background-repeat: no-repeat;
     margin: 0;
 }
 
-.upcoming_course_content {
+.block_my_courses .c_content {
+    margin: 0 20px;
+}
+
+.block_my_courses .upcoming_course_content {
     margin-left: 20px;
 }
