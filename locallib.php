@@ -1,6 +1,8 @@
 <?php
 
 function block_my_courses_api_call(array $params) {
+    global $CFG;
+
     $apiurl   = get_config('block_my_courses', 'api_url');
     $username = get_config('block_my_courses', 'api_user');
     $password = get_config('block_my_courses', 'api_key');
@@ -18,7 +20,7 @@ function block_my_courses_api_call(array $params) {
         // Return fetched data
         return json_decode($curlcontents);
 
-    } else {
+    } else if ($CFG->debugdisplay = true) {
         // Show error
         echo '<pre>';
         echo get_string('servererror', 'block_my_courses')."\n";
