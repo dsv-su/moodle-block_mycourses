@@ -20,7 +20,7 @@ function block_my_courses_api_call(array $params) {
         // Return fetched data
         return json_decode($curlcontents);
 
-    } else if ($CFG->debugdisplay = true) {
+    } else if ($CFG->debugdisplay == true) {
         // Show error
         echo '<pre>';
         echo get_string('servererror', 'block_my_courses')."\n";
