@@ -194,7 +194,7 @@ class block_my_courses extends block_base {
             $content = block_my_courses_get_overviews($categorizedcourses['teaching']['ongoing']);
 
             $this->content->text.=$this->create_collapsable_list(
-                    get_string('ongoingcourses', 'block_my_courses'), implode($content), true, true);
+                    get_string('ongoingcourses', 'block_my_courses'), implode($content), false, true);
 
             $nocoursesprinted = false;
         }
@@ -207,7 +207,7 @@ class block_my_courses extends block_base {
             $content = block_my_courses_get_overviews($categorizedcourses['teaching']['finished']);
 
             $this->content->text.=$this->create_collapsable_list(
-                    get_string('finishedcourses', 'block_my_courses'), implode($content), false, true);
+                    get_string('finishedcourses', 'block_my_courses'), implode($content), true, true);
 
             $nocoursesprinted = false;
         }
@@ -222,7 +222,7 @@ class block_my_courses extends block_base {
             $content .= block_my_courses_get_overviews_starttime($categorizedcourses['taking']['upcoming']);
 
             $this->content->text.=$this->create_collapsable_list(
-                    get_string('upcomingcourses', 'block_my_courses'), $content, true);
+                    get_string('upcomingcourses', 'block_my_courses'), $content, false);
 
             $nocoursesprinted = false;
         }
@@ -235,7 +235,7 @@ class block_my_courses extends block_base {
             $content = block_my_courses_get_overviews($categorizedcourses['taking']['ongoing']);
 
             $this->content->text.=$this->create_collapsable_list(
-                    get_string('ongoingcourses', 'block_my_courses'), implode($content), true);
+                    get_string('ongoingcourses', 'block_my_courses'), implode($content), false);
 
             $nocoursesprinted = false;
         }
@@ -245,8 +245,7 @@ class block_my_courses extends block_base {
                 $takingheaderprinted = true;
             }
 
-            $content = array();
-            $content[] = block_my_courses_get_overviews($categorizedcourses['taking']['passed']);
+            $content = block_my_courses_get_overviews($categorizedcourses['taking']['passed']);
 
             $this->content->text.=$this->create_collapsable_list(
                     get_string('passedcourses', 'block_my_courses'), implode($content));
@@ -260,7 +259,7 @@ class block_my_courses extends block_base {
         return $this->content;
     }
 
-    private function create_collapsable_list($header, $content, $ongoing = false, $teaching = false) {
+    private function create_collapsable_list($header, $content, $collapsed = true, $teaching = false) {
         global $PAGE;
 
         $PAGE->requires->js('/blocks/my_courses/collapse.js');
@@ -272,7 +271,7 @@ class block_my_courses extends block_base {
         }
 
         $contentdisplay = "";
-        if ($teaching && $ongoing) {
+        if ($teaching && !$collapsed) {
             $collapsablelist = html_writer::start_tag('div',
                     array('id' => 'chTeaching'.$header, 'class' => 'c_header expanded', 'onclick' => $javascript));
             $contentdisplay = 'display:block;';
@@ -280,7 +279,7 @@ class block_my_courses extends block_base {
             $collapsablelist = html_writer::start_tag('div',
                     array('id' => 'chTeaching'.$header, 'class' => 'c_header collapsed', 'onclick' => $javascript));
             $contentdisplay = 'display:none;';
-        } else if ($ongoing) {
+        } else if (!$collapsed) {
             $collapsablelist = html_writer::start_tag('div',
                     array('id' => 'chTaking'.$header, 'class' => 'c_header expanded', 'onclick' => $javascript));
             $contentdisplay = 'display:block;';
