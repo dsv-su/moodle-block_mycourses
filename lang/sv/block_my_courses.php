@@ -14,4 +14,6 @@ $string['teaching_header'] = 'Lärare';
 $string['passedcourses'] = 'Avklarade kurser';
 $string['pluginname'] = 'Mina kurser';
 $string['servererror'] = 'Serverfel';
+$string['showwelcomearea'] = 'Visa välkomstarea';
+$string['showwelcomeareadesc'] = 'Visar en liten "välkomstarea" i övre delen av blocket "My Courses", innehållandes användarens profilbild samt olästa meddelanden';
 $string['upcomingcourses'] = 'Kommande kurser';

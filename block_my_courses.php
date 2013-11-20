@@ -48,9 +48,10 @@ class block_my_courses extends block_base {
         $this->content = new stdClass();
         $this->content->text = '';
 
+        $config = get_config('block_my_courses');
+
         // Get courses
-        $allcourses = enrol_get_users_courses($USER->id, false, 'id, shortname, modinfo,
-                sectioncache', 'visible DESC,sortorder ASC');
+        $allcourses = enrol_get_users_courses($USER->id, false, 'id, shortname', 'visible DESC,sortorder ASC');
 
         foreach ($allcourses as $c) {
             if (isset($USER->lastcourseaccess[$c->id])) {
@@ -115,7 +116,7 @@ class block_my_courses extends block_base {
         foreach ($allcourses as $course) {
             $instance = context::instance_by_id($course->ctxid);
             $activeoncourse = is_enrolled($instance, NULL, '', true);
-            $context = get_context_instance(CONTEXT_COURSE, $course->id);
+            $context = context_course::instance($course->id, IGNORE_MISSING);
             $roles = extractshortname(get_user_roles($context, $USER->id));
 
             // See if the user is a teacher in this course, take appropriate action...
@@ -182,19 +183,30 @@ class block_my_courses extends block_base {
             }
         }
 
+
         // Print courses
+        // --------------
+
         $nocoursesprinted = true;
         $teachingheaderprinted = false;
+        $renderer = $this->page->get_renderer('block_my_courses');
+        // Render welcome area
+        if (!empty($config->showwelcomearea)) {
+            require_once($CFG->dirroot.'/message/lib.php');
+            $msgcount = message_count_unread_messages();
+            $this->content->text = $renderer->welcome_area($msgcount);
+        }
+
         if (!empty($categorizedcourses['teaching']['ongoing'])) {
             if (!$teachingheaderprinted) {
                 $this->content->text.=html_writer::tag('h2', get_string('teaching_header', 'block_my_courses'));
                 $teachingheaderprinted = true;
             }
 
-            $content = block_my_courses_get_overviews($categorizedcourses['teaching']['ongoing']);
-
+            $overviews = block_my_courses_get_overviews($categorizedcourses['teaching']['ongoing']);
+            $content = $renderer->course_overview($categorizedcourses['teaching']['ongoing'], $overviews);
             $this->content->text.=$this->create_collapsable_list(
-                    get_string('ongoingcourses', 'block_my_courses'), implode($content), false, true);
+                    get_string('ongoingcourses', 'block_my_courses'), $content, false, true);
 
             $nocoursesprinted = false;
         }
@@ -204,10 +216,10 @@ class block_my_courses extends block_base {
                 $teachingheaderprinted = true;
             }
 
-            $content = block_my_courses_get_overviews($categorizedcourses['teaching']['finished']);
-
+            $overviews = block_my_courses_get_overviews($categorizedcourses['teaching']['finished']);
+            $content = $renderer->course_overview($categorizedcourses['teaching']['finished'], $overviews);
             $this->content->text.=$this->create_collapsable_list(
-                    get_string('finishedcourses', 'block_my_courses'), implode($content), true, true);
+                    get_string('finishedcourses', 'block_my_courses'), $content, true, true);
 
             $nocoursesprinted = false;
         }
@@ -218,6 +230,7 @@ class block_my_courses extends block_base {
                 $this->content->text.=html_writer::tag('h2', get_string('taking_header', 'block_my_courses'));
                 $takingheaderprinted = true;
             }
+
             $content = '';
             $content .= block_my_courses_get_overviews_starttime($categorizedcourses['taking']['upcoming']);
 
@@ -232,10 +245,10 @@ class block_my_courses extends block_base {
                 $takingheaderprinted = true;
             }
 
-            $content = block_my_courses_get_overviews($categorizedcourses['taking']['ongoing']);
-
+            $overviews = block_my_courses_get_overviews($categorizedcourses['taking']['ongoing']);
+            $content = $renderer->course_overview($categorizedcourses['taking']['ongoing'], $overviews);
             $this->content->text.=$this->create_collapsable_list(
-                    get_string('ongoingcourses', 'block_my_courses'), implode($content), false);
+                    get_string('ongoingcourses', 'block_my_courses'), $content, false);
 
             $nocoursesprinted = false;
         }
@@ -245,10 +258,10 @@ class block_my_courses extends block_base {
                 $takingheaderprinted = true;
             }
 
-            $content = block_my_courses_get_overviews($categorizedcourses['taking']['passed']);
-
+            $overviews = block_my_courses_get_overviews($categorizedcourses['taking']['passed']);
+            $content = $renderer->course_overview($categorizedcourses['taking']['passed'], $overviews);
             $this->content->text.=$this->create_collapsable_list(
-                    get_string('passedcourses', 'block_my_courses'), implode($content));
+                    get_string('passedcourses', 'block_my_courses'), $content);
 
             $nocoursesprinted = false;
         }

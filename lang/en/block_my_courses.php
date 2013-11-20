@@ -14,4 +14,6 @@ $string['teaching_header'] = 'Teaching';
 $string['passedcourses'] = 'Passed courses';
 $string['pluginname'] = 'My courses';
 $string['servererror'] = 'Server error';
+$string['showwelcomearea'] = 'Show welcome area';
+$string['showwelcomeareadesc'] = 'Shows a small welcome area at the top of the "My Courses" block, with the user profile pic and unread messages';
 $string['upcomingcourses'] = 'Upcoming courses';
