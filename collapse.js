@@ -3,9 +3,10 @@ function toggle(showHideContent, headerCollapsed) {
     var header = document.getElementById(headerCollapsed);
 
     if (content.style.display == "block") {
-        content.style.display = "none";
+        $('#'+showHideContent).slideUp();
         header.className = "c_header collapsed";
     } else {
+        $('#'+showHideContent).slideDown();
         content.style.display = "block";
         header.className = "c_header expanded";
     }

@@ -41,25 +41,32 @@ class block_my_courses extends block_base {
      */
     public function get_content() {
         global $USER, $CFG;
+        require_once($CFG->dirroot.'/user/profile/lib.php');
+
         if($this->content !== NULL) {
             return $this->content;
         }
 
         $this->content = new stdClass();
         $this->content->text = '';
+        $this->content->footer = '';
 
         $config = get_config('block_my_courses');
 
-        // Get courses
-        $allcourses = enrol_get_users_courses($USER->id, false, 'id, shortname', 'visible DESC,sortorder ASC');
+        profile_load_custom_fields($USER);
 
-        foreach ($allcourses as $c) {
-            if (isset($USER->lastcourseaccess[$c->id])) {
-                $allcourses[$c->id]->lastaccess = $USER->lastcourseaccess[$c->id];
-            } else {
-                $allcourses[$c->id]->lastaccess = 0;
-            }
+        // Load renderer and display nice little welcome area
+        $renderer = $this->page->get_renderer('block_my_courses');
+        if (!empty($config->showwelcomearea)) {
+            require_once($CFG->dirroot.'/message/lib.php');
+            $msgcount = message_count_unread_messages();
+            $this->content->text = $renderer->welcome_area($msgcount);
         }
+
+        // GET EVERYTHINGZ
+        $sitecourses = block_my_courses_get_site_courses();
+        $overviews = block_my_courses_get_overviews($sitecourses);
+        $allcourses = block_my_courses_get_all_courses();
 
         $categorizedcourses = array();
 
@@ -112,7 +119,9 @@ class block_my_courses extends block_base {
         $teachingroles = extractshortname($teachingroles);
         $studentroles  = extractshortname($studentroles);
 
-        // Sort courses
+        // Sort courses and clean up this mess...
+        // ---------------------------------------
+
         foreach ($allcourses as $course) {
             $instance = context::instance_by_id($course->ctxid);
             $activeoncourse = is_enrolled($instance, NULL, '', true);
@@ -189,13 +198,6 @@ class block_my_courses extends block_base {
 
         $nocoursesprinted = true;
         $teachingheaderprinted = false;
-        $renderer = $this->page->get_renderer('block_my_courses');
-        // Render welcome area
-        if (!empty($config->showwelcomearea)) {
-            require_once($CFG->dirroot.'/message/lib.php');
-            $msgcount = message_count_unread_messages();
-            $this->content->text = $renderer->welcome_area($msgcount);
-        }
 
         if (!empty($categorizedcourses['teaching']['ongoing'])) {
             if (!$teachingheaderprinted) {
@@ -203,10 +205,13 @@ class block_my_courses extends block_base {
                 $teachingheaderprinted = true;
             }
 
-            $overviews = block_my_courses_get_overviews($categorizedcourses['teaching']['ongoing']);
+            $heading = html_writer::start_tag('h3');
+            $heading .= get_string('ongoingcourses', 'block_my_courses');
+            $heading .= html_writer::end_tag('h3');
+
             $content = $renderer->course_overview($categorizedcourses['teaching']['ongoing'], $overviews);
-            $this->content->text.=$this->create_collapsable_list(
-                    get_string('ongoingcourses', 'block_my_courses'), $content, false, true);
+            $this->content->text .= block_my_courses_create_collapsable_list('teaching_ongoing',
+                    $heading, $content);
 
             $nocoursesprinted = false;
         }
@@ -216,10 +221,13 @@ class block_my_courses extends block_base {
                 $teachingheaderprinted = true;
             }
 
-            $overviews = block_my_courses_get_overviews($categorizedcourses['teaching']['finished']);
+            $heading = html_writer::start_tag('h3');
+            $heading .= get_string('finishedcourses', 'block_my_courses');
+            $heading .= html_writer::end_tag('h3');
+
             $content = $renderer->course_overview($categorizedcourses['teaching']['finished'], $overviews);
-            $this->content->text.=$this->create_collapsable_list(
-                    get_string('finishedcourses', 'block_my_courses'), $content, true, true);
+            $this->content->text .= block_my_courses_create_collapsable_list('teaching_finished',
+                    $heading, $content);
 
             $nocoursesprinted = false;
         }
@@ -231,11 +239,15 @@ class block_my_courses extends block_base {
                 $takingheaderprinted = true;
             }
 
+            $heading = html_writer::start_tag('h3');
+            $heading .= get_string('upcomingcourses', 'block_my_courses');
+            $heading .= html_writer::end_tag('h3');
+
             $content = '';
             $content .= block_my_courses_get_overviews_starttime($categorizedcourses['taking']['upcoming']);
 
-            $this->content->text.=$this->create_collapsable_list(
-                    get_string('upcomingcourses', 'block_my_courses'), $content, false);
+            $this->content->text .= block_my_courses_create_collapsable_list('taking_upcoming',
+                    $heading, $content, false);
 
             $nocoursesprinted = false;
         }
@@ -245,10 +257,13 @@ class block_my_courses extends block_base {
                 $takingheaderprinted = true;
             }
 
-            $overviews = block_my_courses_get_overviews($categorizedcourses['taking']['ongoing']);
+            $heading = html_writer::start_tag('h3');
+            $heading .= get_string('ongoingcourses', 'block_my_courses');
+            $heading .= html_writer::end_tag('h3');
+
             $content = $renderer->course_overview($categorizedcourses['taking']['ongoing'], $overviews);
-            $this->content->text.=$this->create_collapsable_list(
-                    get_string('ongoingcourses', 'block_my_courses'), $content, false);
+            $this->content->text .= block_my_courses_create_collapsable_list('taking_ongoing',
+                    $heading, $content, false);
 
             $nocoursesprinted = false;
         }
@@ -258,10 +273,13 @@ class block_my_courses extends block_base {
                 $takingheaderprinted = true;
             }
 
-            $overviews = block_my_courses_get_overviews($categorizedcourses['taking']['passed']);
+            $heading = html_writer::start_tag('h3');
+            $heading .= get_string('passedcourses', 'block_my_courses');
+            $heading .= html_writer::end_tag('h3');
+
             $content = $renderer->course_overview($categorizedcourses['taking']['passed'], $overviews);
-            $this->content->text.=$this->create_collapsable_list(
-                    get_string('passedcourses', 'block_my_courses'), $content);
+            $this->content->text .= block_my_courses_create_collapsable_list('taking_passed',
+                    $heading, $content);
 
             $nocoursesprinted = false;
         }
@@ -270,55 +288,6 @@ class block_my_courses extends block_base {
         }
 
         return $this->content;
-    }
-
-    private function create_collapsable_list($header, $content, $collapsed = true, $teaching = false) {
-        global $PAGE;
-
-        $PAGE->requires->js('/blocks/my_courses/collapse.js');
-        $javascript = "";
-        if ($teaching) {
-            $javascript = 'javascript:toggle(\'ccTeaching'.str_replace(array('\'', '\"'), '', $header).'\',\'chTeaching'.$header.'\');';
-        } else {
-            $javascript = 'javascript:toggle(\'ccTaking'.str_replace(array('\'', '\"'), '', $header).'\',\'chTaking'.$header.'\');';
-        }
-
-        $contentdisplay = "";
-        if ($teaching && !$collapsed) {
-            $collapsablelist = html_writer::start_tag('div',
-                    array('id' => 'chTeaching'.$header, 'class' => 'c_header expanded', 'onclick' => $javascript));
-            $contentdisplay = 'display:block;';
-        } else if ($teaching) {
-            $collapsablelist = html_writer::start_tag('div',
-                    array('id' => 'chTeaching'.$header, 'class' => 'c_header collapsed', 'onclick' => $javascript));
-            $contentdisplay = 'display:none;';
-        } else if (!$collapsed) {
-            $collapsablelist = html_writer::start_tag('div',
-                    array('id' => 'chTaking'.$header, 'class' => 'c_header expanded', 'onclick' => $javascript));
-            $contentdisplay = 'display:block;';
-        } else {
-            $collapsablelist = html_writer::start_tag('div',
-                    array('id' => 'chTaking'.$header, 'class' => 'c_header collapsed', 'onclick' => $javascript));
-            $contentdisplay = 'display:none;';
-        }
-
-        $collapsablelist .= html_writer::start_tag('ul');
-        $collapsablelist .= html_writer::start_tag('li');
-        $collapsablelist .= html_writer::tag('h3', $header);
-        $collapsablelist .= html_writer::end_tag('li');
-        $collapsablelist .= html_writer::end_tag('ul');
-        $collapsablelist .= html_writer::end_tag('div');
-
-        if ($teaching) {
-            $collapsablelist .= html_writer::start_tag('div', array('id' => 'ccTeaching'.$header, 'class' => 'c_content', 'style' => $contentdisplay));
-        } else {
-            $collapsablelist .= html_writer::start_tag('div', array('id' => 'ccTaking'.$header, 'class' => 'c_content', 'style' => $contentdisplay));
-        }
-
-        $collapsablelist .= $content;
-        $collapsablelist .= html_writer::end_tag('div');
-
-        return $collapsablelist;
     }
 
     public function print_overview_starttime($courses) {

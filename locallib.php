@@ -94,3 +94,108 @@ function block_my_courses_get_overviews_starttime($courses) {
 
     return $htmlresult;
 }
+
+function block_my_courses_create_collapsable_list($id, $heading, $content, $collapsed = true) {
+    global $PAGE;
+
+    $PAGE->requires->jquery();
+    $PAGE->requires->js('/blocks/my_courses/collapse.js');
+
+    // Create javascript action to take when clicked
+    $action = "javascript:toggle('cc_$id', 'ch_$id');";
+
+    // Create collapsable list
+    // ------------------------
+
+    // Add header
+    $class = 'c_header';
+    $class .= $collapsed ? ' collapsed' : ' expanded';
+    $collapsablelist  = html_writer::start_tag('div',
+            array('id' => 'ch_'.$id,
+                  'class' => $class,
+                  'onclick' => $action)
+            );
+    $collapsablelist .= html_writer::start_tag('ul');
+    $collapsablelist .= html_writer::start_tag('li');
+    $collapsablelist .= $heading;
+    $collapsablelist .= html_writer::end_tag('li');
+    $collapsablelist .= html_writer::end_tag('ul');
+    $collapsablelist .= html_writer::end_tag('div');
+
+    // Add content
+    $contentdisplay = $collapsed ? 'display: none;' : 'display: block;' ;
+    $collapsablelist .= html_writer::start_tag('div',
+            array('id' => 'cc_'.$id,
+                  'class' => 'c_content',
+                  'style' => $contentdisplay));
+    $collapsablelist .= $content;
+    $collapsablelist .= html_writer::end_tag('div');
+
+    return $collapsablelist;
+}
+
+/**
+ * Returns array with site courses
+ *
+ * @return array with site courses
+ */
+function block_my_courses_get_site_courses() {
+    global $USER;
+
+    $courses = enrol_get_my_courses();
+    $site = get_site();
+
+    if (array_key_exists($site->id,$courses)) {
+        unset($courses[$site->id]);
+    }
+
+    foreach ($courses as $c) {
+        if (isset($USER->lastcourseaccess[$c->id])) {
+            $courses[$c->id]->lastaccess = $USER->lastcourseaccess[$c->id];
+        } else {
+            $courses[$c->id]->lastaccess = 0;
+        }
+    }
+
+    // Get remote courses.
+    $remotecourses = array();
+    if (is_enabled_auth('mnet')) {
+        $remotecourses = get_my_remotecourses();
+    }
+    // Remote courses will have -ve remoteid as key, so it can be differentiated from normal courses
+    foreach ($remotecourses as $id => $val) {
+        $remoteid = $val->remoteid * -1;
+        $val->id = $remoteid;
+        $courses[$remoteid] = $val;
+    }
+
+    // From list extract site courses for overview
+    $sitecourses = array();
+    foreach ($courses as $key => $course) {
+        if ($course->id > 0) {
+            $sitecourses[$key] = $course;
+        }
+    }
+
+    return $sitecourses;
+}
+
+/**
+ * Fetches all user courses (upcoming, ongoing and passed)
+ *
+ * @return array with all courses associated with the user
+ */
+function block_my_courses_get_all_courses() {
+    global $USER;
+    $allcourses = enrol_get_users_courses($USER->id, false, 'id, shortname', 'visible DESC,sortorder ASC');
+
+    foreach ($allcourses as $c) {
+        if (isset($USER->lastcourseaccess[$c->id])) {
+            $allcourses[$c->id]->lastaccess = $USER->lastcourseaccess[$c->id];
+        } else {
+            $allcourses[$c->id]->lastaccess = 0;
+        }
+    }
+
+    return $allcourses;
+}
