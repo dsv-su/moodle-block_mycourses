@@ -112,9 +112,8 @@ class block_my_courses_renderer extends plugin_renderer_base {
             }
 
             // Add collapsible region with overview text in it.
-            //$output .= $this->collapsible_region($overview[$module], '', 'region_'.$cid.'_'.$module, $icontext, '', true);
             require_once($CFG->dirroot.'/blocks/my_courses/locallib.php');
-            $output .= block_my_courses_create_collapsable_list('expandableactivityoverview_'.$cid, $icontext, $overview[$module]);
+            $output .= block_my_courses_create_collapsable_list('expandableactivityoverview_'.$cid.'_'.$module, $icontext, $overview[$module]);
 
             $output .= html_writer::end_tag('div');
         }
