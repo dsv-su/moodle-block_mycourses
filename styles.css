@@ -1,9 +1,38 @@
+.block_my_courses h2 {
+    margin-bottom: 0;
+}
+
+.block_my_courses .welcome_area {
+    margin-bottom: 15px;
+}
+
+.block_my_courses .welcome_area .profilepicture {
+    display: inline-block;
+    margin-right: 15px;
+    vertical-align: top;
+}
+
+.block_my_courses .welcome_area .welcome_message {
+    display: inline-block;
+}
+.block_my_courses .activity_info {
+    margin-left: 8px;
+}
+
+.block_my_courses .activity_overview {
+    margin-bottom: 6px;
+}
+
+.block_my_courses .activity_overview .iconlarge {
+    margin-right: 5px;
+}
+
 .block_my_courses .c_header {
-    cursor:pointer;
+    cursor: pointer;
 }
 
 .block_my_courses .c_header h3 {
-    cursor:pointer;
+    cursor: pointer;
 }
 
 .block_my_courses .c_header ul {
