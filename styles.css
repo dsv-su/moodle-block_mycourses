@@ -64,6 +64,14 @@
     margin: 0 20px;
 }
 
+/* We don't want margins on smaller devices, they take up too much space */
+@media (max-width: 979px) {
+    .block_my_courses .c_content {
+        margin-left: 0px;
+        margin-right: 0px;
+    }
+}
+
 .block_my_courses .upcoming_course_content {
     margin-left: 20px;
 }
