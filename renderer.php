@@ -15,22 +15,16 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * course_overview block rendrer
+ * my_courses block renderer
  *
  * @package    my_courses
- * @copyright  2012 Adam Olley <adam.olley@netspot.com.au>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  *
- * Modified by Simon Jarbrant <simon@dvs.su.se> at Stockholm University to work with the my_courses block
+ * Based on the work by Adam Olley on the course_overview block
+ * Modified by Simon Jarbrant <simon@dsv.su.se> at Stockholm University to work with the my_courses block
  */
 defined('MOODLE_INTERNAL') || die;
 
-/**
- * Course_overview block rendrer
- *
- * @copyright  2012 Adam Olley <adam.olley@netspot.com.au>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
 class block_my_courses_renderer extends plugin_renderer_base {
 
     /**
@@ -90,7 +84,7 @@ class block_my_courses_renderer extends plugin_renderer_base {
     }
 
     /**
-     * Coustuct activities overview for a course
+     * Construct activities overview for a course
      *
      * @param int $cid course id
      * @param array $overview overview of activities in course
@@ -102,13 +96,13 @@ class block_my_courses_renderer extends plugin_renderer_base {
         $output = html_writer::start_tag('div', array('class' => 'activity_info'));
         foreach (array_keys($overview) as $module) {
             $output .= html_writer::start_tag('div', array('class' => 'activity_overview'));
-            $url = new moodle_url("/mod/$module/index.php", array('id' => $cid));
+            $url = new moodle_url('/mod/$module/index.php', array('id' => $cid));
             $modulename = get_string('modulename', $module);
             $icontext = html_writer::link($url, $this->output->pix_icon('icon', $modulename, 'mod_'.$module, array('class'=>'iconlarge')));
-            if (get_string_manager()->string_exists("activityoverview", $module)) {
-                $icontext .= get_string("activityoverview", $module);
+            if (get_string_manager()->string_exists('activityoverview', $module)) {
+                $icontext .= get_string('activityoverview', $module);
             } else {
-                $icontext .= get_string("activityoverview", 'block_my_courses', $modulename);
+                $icontext .= get_string('activityoverview', 'block_my_courses', $modulename);
             }
 
             // Add collapsible region with overview text in it.
@@ -150,7 +144,7 @@ class block_my_courses_renderer extends plugin_renderer_base {
     }
 
     /**
-     * Cretes html for welcome area
+     * Creates html for welcome area
      *
      * @param int $msgcount number of messages
      * @return string html string for welcome area.

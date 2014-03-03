@@ -129,65 +129,62 @@ class block_my_courses extends block_base {
             $roles = extractshortname(get_user_roles($context, $USER->id));
 
             // See if the user is a teacher in this course, take appropriate action...
-            foreach ($roles as $r) {
-                if (in_array($r, $studentroles) && count($roles) == 1) {
-                    // User is only a student in this course
-                    break;
-                } else if (!in_array($r, $studentroles) && in_array($r, $teachingroles)) {
-                    // User is only a teacher in this course, we can skip all further checks
-                    $categorizedcourses['teaching']['ongoing'][$course->id] = $course;
-                    continue 2;
-                } else if (in_array($r, $teachingroles)) {
-                    // User is probably both a teacher and a student, we need to run the student checks as well
-                    $categorizedcourses['teaching']['ongoing'][$course->id] = $course;
-                    break;
-                }
-            }
+            if (count(array_intersect($roles, $teachingroles)) > 0) {
+                $passedcourse = false;
 
-            if ($hasidnumber && in_array($course->idnumber, $passedcourseids)) {
-                // This is a passed taken course
-                $categorizedcourses['taking']['passed'][$course->id] = $course;
+                // Get course data from API (need to know the dates man!)
+                if (!empty($course->idnumber)) {
+                    $result = array();
 
-            } else if ($activeoncourse) {
-                // This course is currently ongoing (enrolled as student)
-                $categorizedcourses['taking']['ongoing'][$course->id] = $course;
+                    $idnumbers = explode(',', trim($course->idnumber));
+                    foreach ($idnumbers as $id) {
+                        $params = array();
+                        $params[] = 'rest';
+                        $params[] = 'courseSegment';
+                        $params[] = $id;
+                        $result[] = block_my_courses_api_call($params);
+                    }
 
-            } else if (!$activeoncourse) {
-                // This course is upcoming (enrolled as student)
-                $categorizedcourses['taking']['upcoming'][$course->id] = $course;
-            }
-        }
+                    // Check course endDate, if it's less than time() - the course is finished
+                    if (!empty($result)) {
+                        $bestmatch = current($result);
 
-        // Sort passed teaching courses
-        foreach ($categorizedcourses['teaching']['ongoing'] as $course) {
-            // Get course data from API
-            if (!empty($course->idnumber)) {
-                $result = array();
+                        // Look if there's a better match
+                        foreach ($result as $r) {
+                            if (strtotime($r->endDate) > strtotime($bestmatch->endDate)) {
+                                // This is the most current course instance, update $bestmatch
+                                $bestmatch = $r;
+                            }
+                        }
 
-                $idnumbers = explode(',', trim($course->idnumber));
-                foreach ($idnumbers as $id) {
-                    $params = array();
-                    $params[] = 'rest';
-                    $params[] = 'courseSegment';
-                    $params[] = $id;
-                    $result[] = block_my_courses_api_call($params);
-                }
-
-                // Check course endDate, if it's less than time() - the course is finished
-                if (!empty($result)) {
-                    $bestmatch = current($result);
-                    foreach ($result as $r) {
-                        if (strtotime($r->endDate) > strtotime($bestmatch->endDate)) {
-                            // This is the most current course instance
-                            $bestmatch = $r;
+                        // Compare best match's enddate to current time
+                        if (strtotime($bestmatch->endDate) < time()) {
+                            // This is a passed course
+                            $passedcourse = true;
                         }
                     }
+                }
 
-                    if (strtotime($bestmatch->endDate) < time()) {
-                        // This is a passed course
-                        $categorizedcourses['teaching']['finished'][$course->id] = $course;
-                        unset($categorizedcourses['teaching']['ongoing'][$course->id]);
-                    }
+                if ($passedcourse) {
+                    $categorizedcourses['teaching']['finished'][$course->id] = $course;
+                } else {
+                    $categorizedcourses['teaching']['ongoing'][$course->id] = $course;
+                }
+            }
+
+            // If the user is a student in the course
+            if (count(array_intersect($roles, $studentroles)) > 0) {
+                if ($hasidnumber && in_array($course->idnumber, $passedcourseids)) {
+                    // This is a passed taken course
+                    $categorizedcourses['taking']['passed'][$course->id] = $course;
+
+                } else if ($activeoncourse) {
+                    // This course is currently ongoing (enrolled as student)
+                    $categorizedcourses['taking']['ongoing'][$course->id] = $course;
+
+                } else if (!$activeoncourse) {
+                    // This course is upcoming (enrolled as student)
+                    $categorizedcourses['taking']['upcoming'][$course->id] = $course;
                 }
             }
         }
