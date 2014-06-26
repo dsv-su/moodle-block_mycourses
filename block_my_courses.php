@@ -68,6 +68,7 @@ class block_my_courses extends block_base {
         $overviews = block_my_courses_get_overviews($sitecourses);
         $allcourses = block_my_courses_get_all_courses();
 
+        // Create course categories
         $categorizedcourses = array();
 
         $categorizedcourses['teaching'] = array();
@@ -83,7 +84,7 @@ class block_my_courses extends block_base {
 
         $hasidnumber = false;
 
-        // Check if user has user->idnumber. If not, do not access daisy API
+        // Check if user has user->idnumber. If not, do not access Daisy API
         if (!empty($USER->idnumber)) {
             $hasidnumber = true;
 
@@ -104,7 +105,7 @@ class block_my_courses extends block_base {
             }
         }
 
-        // Get the different roles
+        // Get the different roles in the system
         $teachingroles = array_merge(get_archetype_roles('teacher'), get_archetype_roles('editingteacher'));
         $studentroles = get_archetype_roles('student');
 
@@ -116,6 +117,7 @@ class block_my_courses extends block_base {
             return $shortnames;
         }
 
+        // Extract the shortnames for all roles
         $teachingroles = extractshortname($teachingroles);
         $studentroles  = extractshortname($studentroles);
 
@@ -198,7 +200,7 @@ class block_my_courses extends block_base {
 
         if (!empty($categorizedcourses['teaching']['ongoing'])) {
             if (!$teachingheaderprinted) {
-                $this->content->text.=html_writer::tag('h2', get_string('teaching_header', 'block_my_courses'));
+                $this->content->text .= html_writer::tag('h2', get_string('teaching_header', 'block_my_courses'));
                 $teachingheaderprinted = true;
             }
 
@@ -214,7 +216,7 @@ class block_my_courses extends block_base {
         }
         if (!empty($categorizedcourses['teaching']['finished'])) {
             if (!$teachingheaderprinted) {
-                $this->content->text.=html_writer::tag('h2', get_string('teaching_header', 'block_my_courses'));
+                $this->content->text .= html_writer::tag('h2', get_string('teaching_header', 'block_my_courses'));
                 $teachingheaderprinted = true;
             }
 
@@ -232,7 +234,7 @@ class block_my_courses extends block_base {
         $takingheaderprinted = false;
         if (!empty($categorizedcourses['taking']['upcoming'])) {
             if (!$takingheaderprinted) {
-                $this->content->text.=html_writer::tag('h2', get_string('taking_header', 'block_my_courses'));
+                $this->content->text .= html_writer::tag('h2', get_string('taking_header', 'block_my_courses'));
                 $takingheaderprinted = true;
             }
 
@@ -250,7 +252,7 @@ class block_my_courses extends block_base {
         }
         if (!empty($categorizedcourses['taking']['ongoing'])) {
             if (!$takingheaderprinted) {
-                $this->content->text.=html_writer::tag('h2', get_string('taking_header', 'block_my_courses'));
+                $this->content->text .= html_writer::tag('h2', get_string('taking_header', 'block_my_courses'));
                 $takingheaderprinted = true;
             }
 
@@ -266,7 +268,7 @@ class block_my_courses extends block_base {
         }
         if ($hasidnumber && !empty($categorizedcourses['taking']['passed'])) {
             if (!$takingheaderprinted) {
-                $this->content->text.=html_writer::tag('h2', get_string('taking_header', 'block_my_courses'));
+                $this->content->text .= html_writer::tag('h2', get_string('taking_header', 'block_my_courses'));
                 $takingheaderprinted = true;
             }
 
@@ -281,7 +283,7 @@ class block_my_courses extends block_base {
             $nocoursesprinted = false;
         }
         if ($nocoursesprinted) {
-            $this->content->text.=get_string('nocourses', 'block_my_courses');
+            $this->content->text .= get_string('nocourses', 'block_my_courses');
         }
 
         return $this->content;
