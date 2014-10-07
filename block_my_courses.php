@@ -176,7 +176,17 @@ class block_my_courses extends block_base {
 
             // If the user is a student in the course
             if (count(array_intersect($roles, $studentroles)) > 0) {
-                if ($hasidnumber && in_array($course->idnumber, $passedcourseids)) {
+
+                $courseids = preg_split('/,/', $course->idnumber);
+                $course_idnumber_in_array = false;
+                foreach ($courseids as $courseid) {
+                    $courseid = trim($courseid);
+                    if (in_array($courseid, $passedcourseids)) {
+                        $course_idnumber_in_array = true;
+                    }
+                }
+
+                if ($hasidnumber && $course_idnumber_in_array) {
                     // This is a passed taken course
                     $categorizedcourses['taking']['passed'][$course->id] = $course;
 
