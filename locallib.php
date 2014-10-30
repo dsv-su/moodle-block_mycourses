@@ -63,15 +63,12 @@ function block_my_courses_get_overviews_starttime($courses) {
     }
 
     // Super awesome SQL
-    $sql = "SELECT userid, courseid, timestart
-            FROM mdl_user_enrolments ue
-            INNER JOIN mdl_enrol e
-            ON e.id = ue.enrolid
-            WHERE userid = ? AND courseid IN ( ? )";
+    $sql = "SELECT * FROM {user_enrolments} ue INNER JOIN {enrol} e
+	ON e.id = ue.enrolid WHERE ue.userid = ".$USER->id." AND e.courseid IN (".implode(',', $courseids).")";
 
     // Get starting times from the database
     $sqlobjects = array();
-    $sqlobjects = $DB->get_records_sql($sql, array($USER->id, implode(',', $courseids)));
+    $sqlobjects = $DB->get_records_sql($sql);
 
     // Collect starting times from data gathered from database
     $starttimes = array();
