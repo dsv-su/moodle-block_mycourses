@@ -160,7 +160,7 @@ class block_my_courses extends block_base {
                         }
 
                         // Compare best match's enddate to current time
-                        if (strtotime($bestmatch->endDate) < time()) {
+                        if (strtotime($bestmatch->endDate)+86400 < time()) {
                             // This is a passed course
                             $passedcourse = true;
                         }
