@@ -143,11 +143,12 @@ class block_my_courses extends block_base {
                         $params = array();
                         $params[] = 'rest';
                         $params[] = 'courseSegment';
-                        $params[] = $id;
+                        $params[] = trim($id);
                         $result[] = block_my_courses_api_call($params);
                     }
 
                     // Check course endDate, if it's less than time() - the course is finished
+
                     if (!empty($result)) {
                         $bestmatch = current($result);
 
