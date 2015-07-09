@@ -74,11 +74,13 @@ class block_my_courses extends block_base {
         $categorizedcourses['teaching'] = array();
         $categorizedcourses['teaching']['ongoing'] = array();
         $categorizedcourses['teaching']['finished']  = array();
+        $categorizedcourses['teaching']['programs'] = array();
 
         $categorizedcourses['taking'] = array();
         $categorizedcourses['taking']['upcoming'] = array();
         $categorizedcourses['taking']['ongoing']  = array();
         $categorizedcourses['taking']['passed']   = array();
+        $categorizedcourses['taking']['programs'] = array();
 
         $passedcourseids = array();
 
@@ -131,7 +133,17 @@ class block_my_courses extends block_base {
             $roles = extractshortname(get_user_roles($context, $USER->id));
 
             // See if the user is a teacher in this course, take appropriate action...
-            if (count(array_intersect($roles, $teachingroles)) > 0) {
+            if (count(array_intersect($roles, $teachingroles)) > 0 &&
+                !(count(array_intersect($roles, $teachingroles)) == 1 &&
+                in_array('teacher', $roles) &&
+                strpos($course->idnumber, 'program') !== false
+                )) {
+
+                if (strpos($course->idnumber, 'program') !== false) {
+                    $categorizedcourses['teaching']['programs'][$course->id] = $course;
+                    continue;
+                }
+
                 $passedcourse = false;
 
                 // Get course data from API (need to know the dates man!)
@@ -191,6 +203,9 @@ class block_my_courses extends block_base {
                     // This is a passed taken course
                     $categorizedcourses['taking']['passed'][$course->id] = $course;
 
+                } else if (strpos($course->idnumber, 'program') !== false) {
+                    $categorizedcourses['taking']['programs'][$course->id] = $course;
+
                 } else if ($activeoncourse) {
                     // This course is currently ongoing (enrolled as student)
                     $categorizedcourses['taking']['ongoing'][$course->id] = $course;
@@ -209,6 +224,22 @@ class block_my_courses extends block_base {
         $nocoursesprinted = true;
         $teachingheaderprinted = false;
 
+        if (!empty($categorizedcourses['teaching']['programs'])) {
+            if (!$teachingheaderprinted) {
+                $this->content->text .= html_writer::tag('h2', get_string('teaching_header', 'block_my_courses'));
+                $teachingheaderprinted = true;
+            }
+
+            $heading = html_writer::start_tag('h3');
+            $heading .= get_string('programcourses', 'block_my_courses');
+            $heading .= html_writer::end_tag('h3');
+
+            $content = $renderer->course_overview($categorizedcourses['teaching']['programs'], $overviews);
+            $this->content->text .= block_my_courses_create_collapsable_list('teaching_programs',
+                    $heading, $content);
+
+            $nocoursesprinted = false;
+        }
         if (!empty($categorizedcourses['teaching']['ongoing'])) {
             if (!$teachingheaderprinted) {
                 $this->content->text .= html_writer::tag('h2', get_string('teaching_header', 'block_my_courses'));
@@ -243,6 +274,22 @@ class block_my_courses extends block_base {
         }
 
         $takingheaderprinted = false;
+        if (!empty($categorizedcourses['taking']['programs'])) {
+            if (!$takingheaderprinted) {
+                $this->content->text .= html_writer::tag('h2', get_string('taking_header', 'block_my_courses'));
+                $takingheaderprinted = true;
+            }
+
+            $heading = html_writer::start_tag('h3');
+            $heading .= get_string('programcourses', 'block_my_courses');
+            $heading .= html_writer::end_tag('h3');
+
+            $content = $renderer->course_overview($categorizedcourses['taking']['programs'], $overviews);
+            $this->content->text .= block_my_courses_create_collapsable_list('taking_programs',
+                    $heading, $content, false);
+
+            $nocoursesprinted = false;
+        }
         if (!empty($categorizedcourses['taking']['upcoming'])) {
             if (!$takingheaderprinted) {
                 $this->content->text .= html_writer::tag('h2', get_string('taking_header', 'block_my_courses'));

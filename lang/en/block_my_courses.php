@@ -31,6 +31,7 @@ $string['taking_header'] = 'Studying';
 $string['teaching_header'] = 'Teaching';
 $string['passedcourses'] = 'Passed courses';
 $string['pluginname'] = 'My courses';
+$string['programcourses'] = 'Study programs';
 $string['servererror'] = 'Server error';
 $string['showchildren'] = 'Show children';
 $string['showchildrendesc'] = 'Should child courses be listed underneath the main course title?';

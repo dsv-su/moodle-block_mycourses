@@ -31,6 +31,7 @@ $string['taking_header'] = 'Studerande';
 $string['teaching_header'] = 'Lärare';
 $string['passedcourses'] = 'Avklarade kurser';
 $string['pluginname'] = 'Mina kurser';
+$string['programcourses'] = 'Study programs';
 $string['servererror'] = 'Serverfel';
 $string['showchildren'] = 'Visa underkuser';
 $string['showchildrendesc'] = 'Ska underkurser visas under föräldrakursens titel?';
