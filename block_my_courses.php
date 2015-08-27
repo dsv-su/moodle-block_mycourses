@@ -236,7 +236,7 @@ class block_my_courses extends block_base {
 
             $content = $renderer->course_overview($categorizedcourses['teaching']['programs'], $overviews);
             $this->content->text .= block_my_courses_create_collapsable_list('teaching_programs',
-                    $heading, $content);
+                    $heading, $content, false);
 
             $nocoursesprinted = false;
         }
