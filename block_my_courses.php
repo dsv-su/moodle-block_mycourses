@@ -108,7 +108,7 @@ class block_my_courses extends block_base {
         }
 
         // Get the different roles in the system
-        $teachingroles = array_merge(get_archetype_roles('teacher'), get_archetype_roles('editingteacher'));
+        $teachingroles = array_merge(get_archetype_roles('manager'), get_archetype_roles('teacher'), get_archetype_roles('editingteacher'));
         $studentroles = get_archetype_roles('student');
 
         function extractshortname($roles) {
