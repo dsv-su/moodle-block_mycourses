@@ -4,6 +4,7 @@ $string['alwaysshowall'] = 'Always show all';
 $string['apiurl'] = 'API URL';
 $string['apiuser'] = 'API user';
 $string['apikey'] = 'API key';
+$string['conferences'] = 'Study conferences';
 $string['coursestarts'] = 'This course starts';
 $string['curl_header'] = 'Curl header';
 $string['defaultmaxcourses'] = 'Default maximum courses';
