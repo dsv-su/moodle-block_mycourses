@@ -84,6 +84,7 @@ class block_my_courses extends block_base {
         $categorizedcourses['taking']['conferences'] = array();
 
         $passedcourseids = array();
+        $passedsegmentsids = array();
 
         $hasidnumber = false;
 
@@ -104,6 +105,7 @@ class block_my_courses extends block_base {
             if (!empty($passedcourses)) {
                 foreach ($passedcourses as $course) {
                     $passedcourseids[] = $course->id;
+                    $passedsegmentsids[] = $course->courseSegment->id;
                 }
             }
         }
@@ -200,6 +202,16 @@ class block_my_courses extends block_base {
                 $course_idnumber_in_array = false;
                 foreach ($courseids as $courseid) {
                     $courseid = trim($courseid);
+                    if (strpos($courseid, 'program') === false && strpos($courseid, 'conference') === false) {
+                        $params = array();
+                        $params[] = 'rest';
+                        $params[] = 'courseSegment';
+                        $params[] = $courseid;
+                        $result = block_my_courses_api_call($params);
+                        if (in_array($result->courseSegment->id, $passedsegmentsids)) {
+                            $course_idnumber_in_array = true;
+                        }
+                    }
                     if (in_array($courseid, $passedcourseids)) {
                         $course_idnumber_in_array = true;
                     }
@@ -445,6 +457,6 @@ class block_my_courses extends block_base {
      * @return array
      */
     public function applicable_formats() {
-        return array('my-index'=>true);
+        return array('my'=>true);
     }
 }
