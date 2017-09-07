@@ -197,12 +197,11 @@ class block_my_courses extends block_base {
 
             // If the user is a student in the course
             if (count(array_intersect($roles, $studentroles)) > 0) {
-
                 $courseids = preg_split('/,/', $course->idnumber);
                 $course_idnumber_in_array = false;
                 foreach ($courseids as $courseid) {
                     $courseid = trim($courseid);
-                    if (strpos($courseid, 'program') === false && strpos($courseid, 'conference') === false) {
+                    if (is_numeric($courseid)) {
                         $params = array();
                         $params[] = 'rest';
                         $params[] = 'courseSegment';
