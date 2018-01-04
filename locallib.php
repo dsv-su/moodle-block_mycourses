@@ -9,6 +9,9 @@ function block_my_courses_api_call(array $params) {
 
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+
+    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 3);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 5);
     curl_setopt($ch, CURLOPT_USERPWD, $username.':'.$password);
     curl_setopt($ch, CURLOPT_HTTPHEADER, array('Accept: application/json'));
     curl_setopt($ch, CURLOPT_URL, $apiurl.implode('/', $params));
@@ -32,6 +35,8 @@ function block_my_courses_api_call(array $params) {
         echo 'URL: '.$apiurl.implode('/', $params);
         echo '</pre>';
     }
+
+    return 'daisydown';
 }
 
 function block_my_courses_get_overviews($courses) {

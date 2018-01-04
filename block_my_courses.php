@@ -108,6 +108,10 @@ class block_my_courses extends block_base {
                     $passedsegmentsids[] = $course->courseSegment->id;
                 }
             }
+
+            if ($passedcourses === 'daisydown') {
+                \core\notification::warning('Daisy is currently not responding. Your courses may not be displayed correctly (future/ongoing/passed). This does not affect your performance or any study records.');
+            }
         }
 
         // Get the different roles in the system
