@@ -190,7 +190,12 @@ class block_my_courses extends block_base {
                             $passedcourse = true;
                         }
                     }
-                }
+                } else {
+                    // When there is no Daisy instance linked, take course enddate instead
+                    if (($course->enddate > 0) && ($course->enddate+86400 < time())) {
+                        $passedcourse = true;
+                    }
+		}
 
                 if ($passedcourse) {
                     $categorizedcourses['teaching']['finished'][$course->id] = $course;

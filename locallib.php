@@ -189,7 +189,7 @@ function block_my_courses_get_site_courses() {
  */
 function block_my_courses_get_all_courses() {
     global $USER;
-    $allcourses = enrol_get_users_courses($USER->id, false, 'id, shortname', 'visible DESC,sortorder ASC');
+    $allcourses = enrol_get_users_courses($USER->id, false, 'id, shortname, enddate', 'visible DESC,sortorder ASC');
 
     foreach ($allcourses as $c) {
         if (isset($USER->lastcourseaccess[$c->id])) {
