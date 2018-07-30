@@ -6,6 +6,7 @@ $string['apiuser'] = 'API user';
 $string['apikey'] = 'API key';
 $string['conferences'] = 'Study conferences';
 $string['coursestarts'] = 'This course starts';
+$string['courseswithoutid'] = 'Other past courses';
 $string['curl_header'] = 'Curl header';
 $string['defaultmaxcourses'] = 'Default maximum courses';
 $string['defaultmaxcoursesdesc'] = 'Maximum courses which should be displayed on my_courses block, 0 will show all courses';

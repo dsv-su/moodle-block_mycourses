@@ -82,6 +82,7 @@ class block_my_courses extends block_base {
         $categorizedcourses['taking']['passed']   = array();
         $categorizedcourses['taking']['programs'] = array();
         $categorizedcourses['taking']['conferences'] = array();
+        $categorizedcourses['taking']['nocourseid'] = array();
 
         $passedcourseids = array();
         $passedsegmentsids = array();
@@ -235,6 +236,9 @@ class block_my_courses extends block_base {
                 } else if (strpos($course->idnumber, 'conference') !== false) {
                     $categorizedcourses['taking']['conferences'][$course->id] = $course;
 
+                } else if (($course->enddate > 0) && ($course->enddate+86400 < time())) {
+                    $categorizedcourses['taking']['nocourseid'][$course->id] = $course;
+
                 } else if ($activeoncourse) {
                     // This course is currently ongoing (enrolled as student)
                     $categorizedcourses['taking']['ongoing'][$course->id] = $course;
@@ -385,6 +389,24 @@ class block_my_courses extends block_base {
 
             $nocoursesprinted = false;
         }
+
+        if (!empty($categorizedcourses['taking']['nocourseid'])) {
+            if (!$takingheaderprinted) {
+                $this->content->text .= html_writer::tag('h2', get_string('taking_header', 'block_my_courses'));
+                $takingheaderprinted = true;
+            }
+
+            $heading = html_writer::start_tag('h3');
+            $heading .= get_string('courseswithoutid', 'block_my_courses');
+            $heading .= html_writer::end_tag('h3');
+
+            $content = $renderer->course_overview($categorizedcourses['taking']['nocourseid'], $overviews);
+            $this->content->text .= block_my_courses_create_collapsable_list('taking_nocourseid',
+                    $heading, $content);
+
+            $nocoursesprinted = false;
+        }
+
         if ($hasidnumber && !empty($categorizedcourses['taking']['passed'])) {
             if (!$takingheaderprinted) {
                 $this->content->text .= html_writer::tag('h2', get_string('taking_header', 'block_my_courses'));

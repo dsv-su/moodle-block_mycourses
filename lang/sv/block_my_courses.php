@@ -6,6 +6,7 @@ $string['apiuser'] = 'API-användare';
 $string['apikey'] = 'API-nyckel';
 $string['conferences'] = 'Studiekonferenser';
 $string['coursestarts'] = 'Den här kursen börjar';
+$string['courseswithoutid'] = 'Övriga avslutade kurser';
 $string['curl_header'] = 'Curl header';
 $string['defaultmaxcourses'] = 'Standardvärde för max antal kurser';
 $string['defaultmaxcoursesdesc'] = 'Max antal kurser som ska visas i blocket my_courses. Ange 0 för att visa samtliga kurser';
