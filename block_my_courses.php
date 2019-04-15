@@ -185,14 +185,15 @@ class block_my_courses extends block_base {
 
                         // Look if there's a better match
                         foreach ($result as $r) {
-                            if (strtotime($r->endDate) > strtotime($bestmatch->endDate)) {
+                            if (($r->endDate)/1000 > ($bestmatch->endDate)/1000) {
                                 // This is the most current course instance, update $bestmatch
                                 $bestmatch = $r;
                             }
                         }
 
                         // Compare best match's enddate to current time
-                        if (strtotime($bestmatch->endDate)+86400 < time()) {
+			// We need to remove 000 from course endDate
+                        if (($bestmatch->endDate)/1000+86400 < time()) {
                             // This is a passed course
                             $passedcourse = true;
                         }
