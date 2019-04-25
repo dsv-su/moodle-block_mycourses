@@ -179,21 +179,24 @@ class block_my_courses extends block_base {
                     }
 
                     // Check course endDate, if it's less than time() - the course is finished
-
                     if (!empty($result)) {
+                        foreach ($result as $r) {
+                            if (!is_numeric($r->endDate)) {
+                                $r->endDate = strtotime($r->endDate);
+                            } else {
+                                $r->endDate = $r->endDate/1000;
+                            }
+                        }
                         $bestmatch = current($result);
-
                         // Look if there's a better match
                         foreach ($result as $r) {
-                            if (($r->endDate)/1000 > ($bestmatch->endDate)/1000) {
+                            if (($r->endDate) > ($bestmatch->endDate)) {
                                 // This is the most current course instance, update $bestmatch
                                 $bestmatch = $r;
                             }
                         }
-
                         // Compare best match's enddate to current time
-			// We need to remove 000 from course endDate
-                        if (($bestmatch->endDate)/1000+86400 < time()) {
+                        if ($bestmatch->endDate+86400 < time()) {
                             // This is a passed course
                             $passedcourse = true;
                         }
