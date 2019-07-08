@@ -1,9 +1,15 @@
 .block_my_courses h2 {
-    margin-bottom: 0;
+    margin-bottom: 0.5em;
+    margin-top: 0.5em;
 }
 
-.block_my_courses .welcome_area {
+/*.block_my_courses .welcome_area {
     margin-bottom: 15px;
+}*/
+
+.block_my_courses .flush {
+    padding-bottom: 0 !important;
+    padding-top: 0 !important;
 }
 
 .block_my_courses .welcome_area .profilepicture {
@@ -14,7 +20,18 @@
 
 .block_my_courses .welcome_area .welcome_message {
     display: inline-block;
+    padding-top: 0.5em !important;
 }
+
+.block_my_courses .welcome_area .welcome_message h2 {
+    margin-top: 0px;
+    margin-bottom: 0px;
+}
+
+.block_my_courses .path-my .coursebox {
+    margin: 0;
+}
+
 .block_my_courses .activity_info {
     margin-left: 8px;
 }
@@ -33,6 +50,8 @@
 
 .block_my_courses .c_header h3 {
     cursor: pointer;
+    margin-bottom: 0.5em;
+    font-weight: 200;
 }
 
 .block_my_courses .c_header ul {
@@ -43,7 +62,7 @@
 .block_my_courses .c_header li {
     list-style-type: none;
     list-style: none;
-    margin-left: 20px;
+    margin-left: 25px;
 }
 
 .block_my_courses .c_header.collapsed ul {
@@ -74,4 +93,28 @@
 
 .block_my_courses .upcoming_course_content {
     margin-left: 20px;
+}
+
+.block_my_courses .coursebox {
+    margin-bottom: 15px;
+    border: 1px dotted #ddd;
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+    border-radius: 4px;
+    padding: 5px;
+}
+
+.block_my_courses .coursebox h3 {
+    padding: 3px 15px;
+    font-size: 1.5em;
+    font-weight: 250;
+    margin-bottom: 0px;
+}
+
+.block_my_courses>.card-body>h5 {
+    display: none !important;
+}
+
+.block_my_courses>.card-body>.card-text {
+    margin-top: 0px !important;
 }
