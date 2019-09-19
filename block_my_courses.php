@@ -128,7 +128,7 @@ class block_my_courses extends block_base {
             return $shortnames;
         }
 
-        function append_content($sectionname, $edulevel, $renderer, $categorizedcourses, $overviews, $headerprinted) {
+        function append_content($sectionname, $edulevel, $renderer, $categorizedcourses, $overviews, $headerprinted, $collapsed = false) {
             if (!$headerprinted) {
                 $header = html_writer::tag('h2', get_string($edulevel.'_header', 'block_my_courses'));
                 $headerprinted = true;
@@ -146,7 +146,7 @@ class block_my_courses extends block_base {
                 $content = $renderer->course_overview($categorizedcourses[$edulevel][$sectionname], $overviews);
             }
 
-            return array($headerprinted, $header, block_my_courses_create_collapsable_list($edulevel.'_'.$sectionname, $heading, $content, false));
+            return array($headerprinted, $header, block_my_courses_create_collapsable_list($edulevel.'_'.$sectionname, $heading, $content, $collapsed));
         }
 
         // Extract the shortnames for all roles
@@ -308,7 +308,7 @@ class block_my_courses extends block_base {
             $nocoursesprinted = false;
         }
         if (!empty($categorizedcourses['teaching']['finished'])) {
-            list($teachingheaderprinted, $header, $content) = append_content('finished', 'teaching', $renderer, $categorizedcourses, $overviews, $teachingheaderprinted);
+            list($teachingheaderprinted, $header, $content) = append_content('finished', 'teaching', $renderer, $categorizedcourses, $overviews, $teachingheaderprinted, true);
             $this->content->text .= $header.$content;
             $nocoursesprinted = false;
         }
@@ -336,12 +336,12 @@ class block_my_courses extends block_base {
             $nocoursesprinted = false;
         }
         if (!empty($categorizedcourses['taking']['courseswithoutid'])) {
-            list($takingheaderprinted, $header, $content) = append_content('courseswithoutid', 'taking', $renderer, $categorizedcourses, $overviews, $takingheaderprinted);
+            list($takingheaderprinted, $header, $content) = append_content('courseswithoutid', 'taking', $renderer, $categorizedcourses, $overviews, $takingheaderprinted, true);
             $this->content->text .= $header.$content;
             $nocoursesprinted = false;
         }
         if ($hasidnumber && !empty($categorizedcourses['taking']['passed'])) {
-            list($takingheaderprinted, $header, $content) = append_content('passed', 'taking', $renderer, $categorizedcourses, $overviews, $takingheaderprinted);
+            list($takingheaderprinted, $header, $content) = append_content('passed', 'taking', $renderer, $categorizedcourses, $overviews, $takingheaderprinted, true);
             $this->content->text .= $header.$content;
             $nocoursesprinted = false;
         }
