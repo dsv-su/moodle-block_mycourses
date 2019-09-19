@@ -83,7 +83,7 @@ class block_my_courses extends block_base {
         $categorizedcourses['taking']['passed']   = array();
         $categorizedcourses['taking']['programs'] = array();
         $categorizedcourses['taking']['conferences'] = array();
-        $categorizedcourses['taking']['nocourseid'] = array();
+        $categorizedcourses['taking']['courseswithoutid'] = array();
 
         $passedcourseids = array();
         $passedsegmentsids = array();
@@ -126,6 +126,27 @@ class block_my_courses extends block_base {
                 $shortnames[] = $r->shortname;
             }
             return $shortnames;
+        }
+
+        function append_content($sectionname, $edulevel, $renderer, $categorizedcourses, $overviews, $headerprinted) {
+            if (!$headerprinted) {
+                $header = html_writer::tag('h2', get_string($edulevel.'_header', 'block_my_courses'));
+                $headerprinted = true;
+            } else {
+                $header = '';
+            }
+
+            $heading = html_writer::start_tag('h3');
+            $heading .= get_string($sectionname, 'block_my_courses');
+            $heading .= html_writer::end_tag('h3');
+
+            if ($sectionname == 'upcoming' && $edulevel == 'taking') {
+                $content = block_my_courses_get_overviews_starttime($categorizedcourses['taking']['upcoming']);;
+            } else {
+                $content = $renderer->course_overview($categorizedcourses[$edulevel][$sectionname], $overviews);
+            }
+
+            return array($headerprinted, $header, block_my_courses_create_collapsable_list($edulevel.'_'.$sectionname, $heading, $content, false));
         }
 
         // Extract the shortnames for all roles
@@ -245,7 +266,7 @@ class block_my_courses extends block_base {
                     $categorizedcourses['taking']['conferences'][$course->id] = $course;
 
                 } else if (($course->enddate > 0) && ($course->enddate+86400 < time())) {
-                    $categorizedcourses['taking']['nocourseid'][$course->id] = $course;
+                    $categorizedcourses['taking']['courseswithoutid'][$course->id] = $course;
 
                 } else if ($activeoncourse) {
                     // This course is currently ongoing (enrolled as student)
@@ -263,188 +284,65 @@ class block_my_courses extends block_base {
         // --------------
 
         $nocoursesprinted = true;
+
+        // Teaching courses start here.
         $teachingheaderprinted = false;
-
         if (!empty($categorizedcourses['teaching']['conferences'])) {
-            if (!$teachingheaderprinted) {
-                $this->content->text .= html_writer::tag('h2', get_string('teaching_header', 'block_my_courses'));
-                $teachingheaderprinted = true;
-            }
-
-            $heading = html_writer::start_tag('h3');
-            $heading .= get_string('conferences', 'block_my_courses');
-            $heading .= html_writer::end_tag('h3');
-
-            $content = $renderer->course_overview($categorizedcourses['teaching']['conferences'], $overviews);
-            $this->content->text .= block_my_courses_create_collapsable_list('teaching_conferences',
-                    $heading, $content, false);
-
+            list($teachingheaderprinted, $header, $content) = append_content('conferences', 'teaching', $renderer, $categorizedcourses, $overviews, $teachingheaderprinted);
+            $this->content->text .= $header.$content;
             $nocoursesprinted = false;
         }
         if (!empty($categorizedcourses['teaching']['programs'])) {
-            if (!$teachingheaderprinted) {
-                $this->content->text .= html_writer::tag('h2', get_string('teaching_header', 'block_my_courses'));
-                $teachingheaderprinted = true;
-            }
-
-            $heading = html_writer::start_tag('h3');
-            $heading .= get_string('programcourses', 'block_my_courses');
-            $heading .= html_writer::end_tag('h3');
-
-            $content = $renderer->course_overview($categorizedcourses['teaching']['programs'], $overviews);
-            $this->content->text .= block_my_courses_create_collapsable_list('teaching_programs',
-                    $heading, $content, false);
-
+            list($teachingheaderprinted, $header, $content) = append_content('programs', 'teaching', $renderer, $categorizedcourses, $overviews, $teachingheaderprinted);
+            $this->content->text .= $header.$content;
             $nocoursesprinted = false;
         }
         if (!empty($categorizedcourses['teaching']['upcoming'])) {
-            if (!$teachingheaderprinted) {
-                $this->content->text .= html_writer::tag('h2', get_string('teaching_header', 'block_my_courses'));
-                $teachingheaderprinted = true;
-            }
-
-            $heading = html_writer::start_tag('h3');
-            $heading .= get_string('upcomingcourses', 'block_my_courses');
-            $heading .= html_writer::end_tag('h3');
-
-            $content = $renderer->course_overview($categorizedcourses['teaching']['upcoming'], $overviews);
-            $this->content->text .= block_my_courses_create_collapsable_list('teaching_upcoming',
-                    $heading, $content, false);
-
+            list($teachingheaderprinted, $header, $content) = append_content('upcoming', 'teaching', $renderer, $categorizedcourses, $overviews, $teachingheaderprinted);
+            $this->content->text .= $header.$content;
             $nocoursesprinted = false;
         }
         if (!empty($categorizedcourses['teaching']['ongoing'])) {
-            if (!$teachingheaderprinted) {
-                $this->content->text .= html_writer::tag('h2', get_string('teaching_header', 'block_my_courses'));
-                $teachingheaderprinted = true;
-            }
-
-            $heading = html_writer::start_tag('h3');
-            $heading .= get_string('ongoingcourses', 'block_my_courses');
-            $heading .= html_writer::end_tag('h3');
-
-            $content = $renderer->course_overview($categorizedcourses['teaching']['ongoing'], $overviews);
-            $this->content->text .= block_my_courses_create_collapsable_list('teaching_ongoing',
-                    $heading, $content, false);
-
+            list($teachingheaderprinted, $header, $content) = append_content('ongoing', 'teaching', $renderer, $categorizedcourses, $overviews, $teachingheaderprinted);
+            $this->content->text .= $header.$content;
             $nocoursesprinted = false;
         }
         if (!empty($categorizedcourses['teaching']['finished'])) {
-            if (!$teachingheaderprinted) {
-                $this->content->text .= html_writer::tag('h2', get_string('teaching_header', 'block_my_courses'));
-                $teachingheaderprinted = true;
-            }
-
-            $heading = html_writer::start_tag('h3');
-            $heading .= get_string('finishedcourses', 'block_my_courses');
-            $heading .= html_writer::end_tag('h3');
-
-            $content = $renderer->course_overview($categorizedcourses['teaching']['finished'], $overviews);
-            $this->content->text .= block_my_courses_create_collapsable_list('teaching_finished',
-                    $heading, $content);
-
+            list($teachingheaderprinted, $header, $content) = append_content('finished', 'teaching', $renderer, $categorizedcourses, $overviews, $teachingheaderprinted);
+            $this->content->text .= $header.$content;
             $nocoursesprinted = false;
         }
 
+        // Taking courses start here.
         $takingheaderprinted = false;
         if (!empty($categorizedcourses['taking']['conferences'])) {
-            if (!$takingheaderprinted) {
-                $this->content->text .= html_writer::tag('h2', get_string('taking_header', 'block_my_courses'));
-                $takingheaderprinted = true;
-            }
-
-            $heading = html_writer::start_tag('h3');
-            $heading .= get_string('conferences', 'block_my_courses');
-            $heading .= html_writer::end_tag('h3');
-
-            $content = $renderer->course_overview($categorizedcourses['taking']['conferences'], $overviews);
-            $this->content->text .= block_my_courses_create_collapsable_list('taking_conferences',
-                    $heading, $content, false);
-
+            list($takingheaderprinted, $header, $content) = append_content('conferences', 'taking', $renderer, $categorizedcourses, $overviews, $takingheaderprinted);
+            $this->content->text .= $header.$content;
             $nocoursesprinted = false;
         }
         if (!empty($categorizedcourses['taking']['programs'])) {
-            if (!$takingheaderprinted) {
-                $this->content->text .= html_writer::tag('h2', get_string('taking_header', 'block_my_courses'));
-                $takingheaderprinted = true;
-            }
-
-            $heading = html_writer::start_tag('h3');
-            $heading .= get_string('programcourses', 'block_my_courses');
-            $heading .= html_writer::end_tag('h3');
-
-            $content = $renderer->course_overview($categorizedcourses['taking']['programs'], $overviews);
-            $this->content->text .= block_my_courses_create_collapsable_list('taking_programs',
-                    $heading, $content, false);
-
+            list($takingheaderprinted, $header, $content) = append_content('programs', 'taking', $renderer, $categorizedcourses, $overviews, $takingheaderprinted);
+            $this->content->text .= $header.$content;
             $nocoursesprinted = false;
         }
         if (!empty($categorizedcourses['taking']['upcoming'])) {
-            if (!$takingheaderprinted) {
-                $this->content->text .= html_writer::tag('h2', get_string('taking_header', 'block_my_courses'));
-                $takingheaderprinted = true;
-            }
-
-            $heading = html_writer::start_tag('h3');
-            $heading .= get_string('upcomingcourses', 'block_my_courses');
-            $heading .= html_writer::end_tag('h3');
-
-            $content = '';
-            $content .= block_my_courses_get_overviews_starttime($categorizedcourses['taking']['upcoming']);
-
-            $this->content->text .= block_my_courses_create_collapsable_list('taking_upcoming',
-                    $heading, $content, false);
-
+            list($takingheaderprinted, $header, $content) = append_content('upcoming', 'taking', $renderer, $categorizedcourses, $overviews, $takingheaderprinted);
+            $this->content->text .= $header.$content;
             $nocoursesprinted = false;
         }
         if (!empty($categorizedcourses['taking']['ongoing'])) {
-            if (!$takingheaderprinted) {
-                $this->content->text .= html_writer::tag('h2', get_string('taking_header', 'block_my_courses'));
-                $takingheaderprinted = true;
-            }
-
-            $heading = html_writer::start_tag('h3');
-            $heading .= get_string('ongoingcourses', 'block_my_courses');
-            $heading .= html_writer::end_tag('h3');
-
-            $content = $renderer->course_overview($categorizedcourses['taking']['ongoing'], $overviews);
-            $this->content->text .= block_my_courses_create_collapsable_list('taking_ongoing',
-                    $heading, $content, false);
-
+            list($takingheaderprinted, $header, $content) = append_content('ongoing', 'taking', $renderer, $categorizedcourses, $overviews, $takingheaderprinted);
+            $this->content->text .= $header.$content;
             $nocoursesprinted = false;
         }
-
-        if (!empty($categorizedcourses['taking']['nocourseid'])) {
-            if (!$takingheaderprinted) {
-                $this->content->text .= html_writer::tag('h2', get_string('taking_header', 'block_my_courses'));
-                $takingheaderprinted = true;
-            }
-
-            $heading = html_writer::start_tag('h3');
-            $heading .= get_string('courseswithoutid', 'block_my_courses');
-            $heading .= html_writer::end_tag('h3');
-
-            $content = $renderer->course_overview($categorizedcourses['taking']['nocourseid'], $overviews);
-            $this->content->text .= block_my_courses_create_collapsable_list('taking_nocourseid',
-                    $heading, $content);
-
+        if (!empty($categorizedcourses['taking']['courseswithoutid'])) {
+            list($takingheaderprinted, $header, $content) = append_content('courseswithoutid', 'taking', $renderer, $categorizedcourses, $overviews, $takingheaderprinted);
+            $this->content->text .= $header.$content;
             $nocoursesprinted = false;
         }
-
         if ($hasidnumber && !empty($categorizedcourses['taking']['passed'])) {
-            if (!$takingheaderprinted) {
-                $this->content->text .= html_writer::tag('h2', get_string('taking_header', 'block_my_courses'));
-                $takingheaderprinted = true;
-            }
-
-            $heading = html_writer::start_tag('h3');
-            $heading .= get_string('passedcourses', 'block_my_courses');
-            $heading .= html_writer::end_tag('h3');
-
-            $content = $renderer->course_overview($categorizedcourses['taking']['passed'], $overviews);
-            $this->content->text .= block_my_courses_create_collapsable_list('taking_passed',
-                    $heading, $content);
-
+            list($takingheaderprinted, $header, $content) = append_content('passed', 'taking', $renderer, $categorizedcourses, $overviews, $takingheaderprinted);
+            $this->content->text .= $header.$content;
             $nocoursesprinted = false;
         }
         if ($nocoursesprinted) {
