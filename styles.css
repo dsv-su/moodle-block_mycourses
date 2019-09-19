@@ -118,3 +118,7 @@
 .block_my_courses>.card-body>.card-text {
     margin-top: 0px !important;
 }
+
+.block_my_courses .activity_info {
+    margin-top: 0.5em;
+}

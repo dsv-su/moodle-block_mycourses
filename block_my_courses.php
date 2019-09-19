@@ -72,6 +72,7 @@ class block_my_courses extends block_base {
         $categorizedcourses = array();
 
         $categorizedcourses['teaching'] = array();
+        $categorizedcourses['teaching']['upcoming']  = array();
         $categorizedcourses['teaching']['ongoing'] = array();
         $categorizedcourses['teaching']['finished']  = array();
         $categorizedcourses['teaching']['programs'] = array();
@@ -205,6 +206,8 @@ class block_my_courses extends block_base {
 
                 if ($passedcourse) {
                     $categorizedcourses['teaching']['finished'][$course->id] = $course;
+                } else if ($course->startdate > time()) {
+                    $categorizedcourses['teaching']['upcoming'][$course->id] = $course;
                 } else {
                     $categorizedcourses['teaching']['ongoing'][$course->id] = $course;
                 }
@@ -290,6 +293,22 @@ class block_my_courses extends block_base {
 
             $content = $renderer->course_overview($categorizedcourses['teaching']['programs'], $overviews);
             $this->content->text .= block_my_courses_create_collapsable_list('teaching_programs',
+                    $heading, $content, false);
+
+            $nocoursesprinted = false;
+        }
+        if (!empty($categorizedcourses['teaching']['upcoming'])) {
+            if (!$teachingheaderprinted) {
+                $this->content->text .= html_writer::tag('h2', get_string('teaching_header', 'block_my_courses'));
+                $teachingheaderprinted = true;
+            }
+
+            $heading = html_writer::start_tag('h3');
+            $heading .= get_string('upcomingcourses', 'block_my_courses');
+            $heading .= html_writer::end_tag('h3');
+
+            $content = $renderer->course_overview($categorizedcourses['teaching']['upcoming'], $overviews);
+            $this->content->text .= block_my_courses_create_collapsable_list('teaching_upcoming',
                     $heading, $content, false);
 
             $nocoursesprinted = false;
