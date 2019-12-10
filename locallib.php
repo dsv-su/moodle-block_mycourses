@@ -40,8 +40,10 @@ function block_my_courses_api_call(array $params) {
 }
 
 function block_my_courses_get_overviews($courses) {
+    global $CFG;
+
     $htmlarray = array();
-    if ($modules = get_plugin_list_with_function('mod', 'print_overview')) {
+    $modules = array_diff(scandir($CFG->dirroot.'/blocks/my_courses/lib'), array('.', '..'));
         // Split courses list into batches with no more than MAX_MODINFO_CACHE_SIZE courses in one batch.
         // Otherwise we exceed the cache limit in get_fast_modinfo() and rebuild it too often.
         if (defined('MAX_MODINFO_CACHE_SIZE') && MAX_MODINFO_CACHE_SIZE > 0 && count($courses) > MAX_MODINFO_CACHE_SIZE) {
@@ -50,11 +52,14 @@ function block_my_courses_get_overviews($courses) {
             $batches = array($courses);
         }
         foreach ($batches as $courses) {
-            foreach ($modules as $fname) {
+            foreach ($modules as $module) {
+                $modulename = explode('.', $module)[0];
+                require_once($CFG->dirroot.'/blocks/my_courses/lib/'.$module);
+                require_once($CFG->dirroot.'/mod/'.$modulename.'/lib.php');
+                $fname = "block_my_courses_".$modulename."_print_overview";
                 $fname($courses, $htmlarray);
             }
         }
-    }
     return $htmlarray;
 }
 
