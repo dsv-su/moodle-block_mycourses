@@ -43,7 +43,7 @@ function block_my_courses_get_overviews($courses) {
     global $CFG;
 
     $htmlarray = array();
-    $modules = array_diff(scandir($CFG->dirroot.'/blocks/my_courses/lib'), array('.', '..'));
+    $modules = array_map(function ($v) {return basename($v);}, glob($CFG->dirroot.'/blocks/my_courses/lib/*.php'));
         // Split courses list into batches with no more than MAX_MODINFO_CACHE_SIZE courses in one batch.
         // Otherwise we exceed the cache limit in get_fast_modinfo() and rebuild it too often.
         if (defined('MAX_MODINFO_CACHE_SIZE') && MAX_MODINFO_CACHE_SIZE > 0 && count($courses) > MAX_MODINFO_CACHE_SIZE) {
