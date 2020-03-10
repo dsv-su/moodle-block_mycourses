@@ -259,7 +259,7 @@ class block_my_courses extends block_base {
                     // This is a passed taken course
                     $categorizedcourses['taking']['passed'][$course->id] = $course;
 
-                } else if (strpos($course->idnumber, 'program') !== false) {
+                } else if (strpos($course->idnumber, 'program') !== false || $course->category == 16) {
                     $categorizedcourses['taking']['programs'][$course->id] = $course;
 
                 } else if (strpos($course->idnumber, 'conference') !== false) {
