@@ -1,5 +1,7 @@
 <?php
 
+use core_message\output\messagearea\contact;
+
 /**
  * @deprecated since 3.3
  * @todo The final deprecation of this function will take place in Moodle 3.7 - see MDL-57487.
@@ -9,14 +11,15 @@
  * @param array $courses
  * @param array $htmlarray
  */
-function block_my_courses_forum_print_overview($courses,&$htmlarray) {
+function block_my_courses_forum_print_overview($courses, &$htmlarray)
+{
     global $USER, $CFG, $DB, $SESSION;
 
     if (empty($courses) || !is_array($courses) || count($courses) == 0) {
         return array();
     }
 
-    if (!$forums = get_all_instances_in_courses('forum',$courses)) {
+    if (!$forums = get_all_instances_in_courses('forum', $courses)) {
         return;
     }
 
@@ -30,7 +33,7 @@ function block_my_courses_forum_print_overview($courses,&$htmlarray) {
             $coursessqls[] = '(d.course = ?)';
             $params[] = $course->id;
 
-        // Only posts created after the course last access
+            // Only posts created after the course last access
         } else {
             $coursessqls[] = '(d.course = ? AND p.created > ?)';
             $params[] = $course->id;
@@ -41,14 +44,14 @@ function block_my_courses_forum_print_overview($courses,&$htmlarray) {
     $coursessql = implode(' OR ', $coursessqls);
 
     $sql = "SELECT d.id, d.forum, d.course, d.groupid, COUNT(*) as count "
-                .'FROM {forum_discussions} d '
-                .'JOIN {forum_posts} p ON p.discussion = d.id '
-                ."WHERE ($coursessql) "
-                .'AND p.deleted <> 1 '
-                .'AND p.userid != ? '
-                .'AND (d.timestart <= ? AND (d.timeend = 0 OR d.timeend > ?)) '
-                .'GROUP BY d.id, d.forum, d.course, d.groupid '
-                .'ORDER BY d.course, d.forum';
+        . 'FROM {forum_discussions} d '
+        . 'JOIN {forum_posts} p ON p.discussion = d.id '
+        . "WHERE ($coursessql) "
+        . 'AND p.deleted <> 1 '
+        . 'AND p.userid != ? '
+        . 'AND (d.timestart <= ? AND (d.timeend = 0 OR d.timeend > ?)) '
+        . 'GROUP BY d.id, d.forum, d.course, d.groupid '
+        . 'ORDER BY d.course, d.forum';
     $params[] = time();
     $params[] = time();
 
@@ -68,10 +71,10 @@ function block_my_courses_forum_print_overview($courses,&$htmlarray) {
     }
 
     if (count($trackingforums) > 0) {
-        $cutoffdate = isset($CFG->forum_oldpostdays) ? (time() - ($CFG->forum_oldpostdays*24*60*60)) : 0;
-        $sql = 'SELECT d.forum,d.course,COUNT(p.id) AS count '.
-            ' FROM {forum_posts} p '.
-            ' JOIN {forum_discussions} d ON p.discussion = d.id '.
+        $cutoffdate = isset($CFG->forum_oldpostdays) ? (time() - ($CFG->forum_oldpostdays * 24 * 60 * 60)) : 0;
+        $sql = 'SELECT d.forum,d.course,COUNT(p.id) AS count ' .
+            ' FROM {forum_posts} p ' .
+            ' JOIN {forum_discussions} d ON p.discussion = d.id ' .
             ' LEFT JOIN {forum_read} r ON r.postid = p.id AND r.userid = ? WHERE p.deleted <> 1 AND (';
         $params = array($USER->id);
 
@@ -94,7 +97,7 @@ function block_my_courses_forum_print_overview($courses,&$htmlarray) {
             }
             $params[] = $groupid;
         }
-        $sql = substr($sql,0,-3); // take off the last OR
+        $sql = substr($sql, 0, -3); // take off the last OR
         $sql .= ') AND p.modified >= ? AND r.id is NULL ';
         $sql .= 'AND (d.timestart < ? AND (d.timeend = 0 OR d.timeend > ?)) ';
         $sql .= 'GROUP BY d.forum,d.course';
@@ -113,7 +116,7 @@ function block_my_courses_forum_print_overview($courses,&$htmlarray) {
         return;
     }
 
-    $strforum = get_string('modulename','forum');
+    $strforum = get_string('modulename', 'forum');
 
     foreach ($forums as $forum) {
         $str = '';
@@ -124,25 +127,25 @@ function block_my_courses_forum_print_overview($courses,&$htmlarray) {
         if (array_key_exists($forum->id, $forumsnewposts) && !empty($forumsnewposts[$forum->id])) {
             $count = $forumsnewposts[$forum->id]->count;
         }
-        if (array_key_exists($forum->id,$unread)) {
+        if (array_key_exists($forum->id, $unread)) {
             $thisunread = $unread[$forum->id]->count;
             $showunread = true;
         }
         if ($count > 0 || $thisunread > 0) {
-            $str .= '<div class="overview forum"><div class="name">'.$strforum.': <a title="'.$strforum.'" href="'.$CFG->wwwroot.'/mod/forum/view.php?f='.$forum->id.'">'.
-                $forum->name.'</a></div>';
+            $str .= '<div class="overview forum"><div class="name">' . $strforum . ': <a title="' . $strforum . '" href="' . $CFG->wwwroot . '/mod/forum/view.php?f=' . $forum->id . '">' .
+                $forum->name . '</a></div>';
             $str .= '<div class="info"><span class="postsincelogin">';
-            $str .= get_string('overviewnumpostssince', 'forum', $count)."</span>";
+            $str .= get_string('overviewnumpostssince', 'forum', $count) . "</span>";
             if (!empty($showunread)) {
-                $str .= '<div class="unreadposts">'.get_string('overviewnumunread', 'forum', $thisunread).'</div>';
+                $str .= '<div class="unreadposts">' . get_string('overviewnumunread', 'forum', $thisunread) . '</div>';
             }
             $str .= '</div></div>';
         }
         if (!empty($str)) {
-            if (!array_key_exists($forum->course,$htmlarray)) {
+            if (!array_key_exists($forum->course, $htmlarray)) {
                 $htmlarray[$forum->course] = array();
             }
-            if (!array_key_exists('forum',$htmlarray[$forum->course])) {
+            if (!array_key_exists('forum', $htmlarray[$forum->course])) {
                 $htmlarray[$forum->course]['forum'] = ''; // initialize, avoid warnings
             }
             $htmlarray[$forum->course]['forum'] .= $str;
@@ -159,7 +162,8 @@ function block_my_courses_forum_print_overview($courses,&$htmlarray) {
  * @param  array $discussions Discussions with new posts array
  * @return array Forums with the number of new posts
  */
-function block_my_courses_forum_filter_user_groups_discussions($discussions) {
+function block_my_courses_forum_filter_user_groups_discussions($discussions)
+{
 
     // Group the remaining discussions posts by their forumid.
     $filteredforums = array();
@@ -169,6 +173,9 @@ function block_my_courses_forum_filter_user_groups_discussions($discussions) {
 
         // Course data is already cached.
         $instances = get_fast_modinfo($discussion->course)->get_instances();
+        if (!array_key_exists($discussion->forum, $instances['forum'])) {
+            continue;
+        }
         $forum = $instances['forum'][$discussion->forum];
 
         // Continue if the user should not see this discussion.
@@ -183,7 +190,6 @@ function block_my_courses_forum_filter_user_groups_discussions($discussions) {
             $filteredforums[$forum->instance]->count = 0;
         }
         $filteredforums[$forum->instance]->count += $discussion->count;
-
     }
 
     return $filteredforums;
