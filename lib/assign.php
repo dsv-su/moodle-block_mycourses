@@ -41,7 +41,8 @@ function block_my_courses_assign_print_overview($courses, &$htmlarray)
         } else {
             $isopen = true;
         }
-        if ($isopen) {
+        $context = context_module::instance($assignment->coursemodule);
+        if ($isopen || has_capability('mod/assign:grade', $context, null, false)) {
             $assignmentids[] = $assignment->id;
         }
     }
@@ -283,11 +284,11 @@ function block_my_courses_assign_get_grade_details_for_print_overview(
                                    LEFT JOIN {assign_grades} g ON
                                              s.userid = g.userid AND
                                              s.assignment = g.assignment AND
-                                             g.attemptnumber = s.attemptnumber
+                                             (g.attemptnumber = s.attemptnumber OR s.attemptnumber IS NULL)
                                    LEFT JOIN {assign} a ON
                                              a.id = s.assignment
                                        WHERE
-                                             ( g.timemodified is NULL OR
+                                             (g.timemodified IS NULL OR
                                              s.timemodified >= g.timemodified OR
                                              g.grade IS NULL OR
                                              (g.grade = -1 AND

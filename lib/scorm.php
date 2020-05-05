@@ -9,7 +9,8 @@
  * @param array $htmlarray
  * @return mixed
  */
-function block_my_courses_scorm_print_overview($courses, &$htmlarray) {
+function block_my_courses_scorm_print_overview($courses, &$htmlarray)
+{
     global $USER, $CFG;
 
     if (empty($courses) || !is_array($courses) || count($courses) == 0) {
@@ -29,19 +30,24 @@ function block_my_courses_scorm_print_overview($courses, &$htmlarray) {
         if ($scorm->timeopen) {
             $isopen = ($scorm->timeopen <= $time && $time <= $scorm->timeclose);
         }
-        if ($scorm->displayattemptstatus == SCORM_DISPLAY_ATTEMPTSTATUS_ALL ||
-                $scorm->displayattemptstatus == SCORM_DISPLAY_ATTEMPTSTATUS_MY) {
+        if (
+            $scorm->displayattemptstatus == SCORM_DISPLAY_ATTEMPTSTATUS_ALL ||
+            $scorm->displayattemptstatus == SCORM_DISPLAY_ATTEMPTSTATUS_MY
+        ) {
             $showattemptstatus = true;
         }
         if ($showattemptstatus || !empty($isopen) || !empty($scorm->timeclose)) {
-            $str = html_writer::start_div('scorm overview').html_writer::div($strscorm. ': '.
-                    html_writer::link($CFG->wwwroot.'/mod/scorm/view.php?id='.$scorm->coursemodule, $scorm->name,
-                                        array('title' => $strscorm, 'class' => $scorm->visible ? '' : 'dimmed')), 'name');
+            $str = html_writer::start_div('scorm overview') . html_writer::div($strscorm . ': ' .
+                html_writer::link(
+                    $CFG->wwwroot . '/mod/scorm/view.php?id=' . $scorm->coursemodule,
+                    $scorm->name,
+                    array('title' => $strscorm, 'class' => $scorm->visible ? '' : 'dimmed')
+                ), 'name');
             if ($scorm->timeclose) {
-                $str .= html_writer::div($strduedate.': '.userdate($scorm->timeclose), 'info');
+                $str .= html_writer::div($strduedate . ': ' . userdate($scorm->timeclose), 'info');
             }
             if ($showattemptstatus) {
-                require_once($CFG->dirroot.'/mod/scorm/locallib.php');
+                require_once($CFG->dirroot . '/mod/scorm/locallib.php');
                 $str .= html_writer::div(scorm_get_attempt_status($USER, $scorm), 'details');
             }
             $str .= html_writer::end_div();
