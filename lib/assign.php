@@ -10,7 +10,8 @@
  * @param array $htmlarray The array of html to return
  * @return true
  */
-function block_my_courses_assign_print_overview($courses, &$htmlarray) {
+function block_my_courses_assign_print_overview($courses, &$htmlarray)
+{
     global $CFG, $DB;
 
     if (empty($courses) || !is_array($courses) || count($courses) == 0) {
@@ -38,8 +39,8 @@ function block_my_courses_assign_print_overview($courses, &$htmlarray) {
                 $isopen = ($assignment->allowsubmissionsfromdate <= $time);
             }
         } else {
-    		$isopen = true;
-    	}
+            $isopen = true;
+        }
         if ($isopen) {
             $assignmentids[] = $assignment->id;
         }
@@ -77,16 +78,25 @@ function block_my_courses_assign_print_overview($courses, &$htmlarray) {
         // Does the submission status of the assignment require notification?
         if (has_capability('mod/assign:submit', $context, null, false)) {
             // Does the submission status of the assignment require notification?
-            $submitdetails = block_my_courses_assign_get_mysubmission_details_for_print_overview($mysubmissions, $sqlassignmentids,
-                    $assignmentidparams, $assignment);
+            $submitdetails = block_my_courses_assign_get_mysubmission_details_for_print_overview(
+                $mysubmissions,
+                $sqlassignmentids,
+                $assignmentidparams,
+                $assignment
+            );
         } else {
             $submitdetails = false;
         }
 
         if (has_capability('mod/assign:grade', $context, null, false)) {
             // Does the grading status of the assignment require notification ?
-            $gradedetails = block_my_courses_assign_get_grade_details_for_print_overview($unmarkedsubmissions, $sqlassignmentids,
-                    $assignmentidparams, $assignment, $context);
+            $gradedetails = block_my_courses_assign_get_grade_details_for_print_overview(
+                $unmarkedsubmissions,
+                $sqlassignmentids,
+                $assignmentidparams,
+                $assignment,
+                $context
+            );
         } else {
             $gradedetails = false;
         }
@@ -102,13 +112,13 @@ function block_my_courses_assign_print_overview($courses, &$htmlarray) {
         }
         $href = $CFG->wwwroot . '/mod/assign/view.php?id=' . $assignment->coursemodule;
         $basestr = '<div class="assign overview">' .
-               '<div class="name">' .
-               $strassignment . ': '.
-               '<a ' . $dimmedclass .
-                   'title="' . $strassignment . '" ' .
-                   'href="' . $href . '">' .
-               format_string($assignment->name) .
-               '</a></div>';
+            '<div class="name">' .
+            $strassignment . ': ' .
+            '<a ' . $dimmedclass .
+            'title="' . $strassignment . '" ' .
+            'href="' . $href . '">' .
+            format_string($assignment->name) .
+            '</a></div>';
         if ($assignment->duedate) {
             $userdate = userdate($assignment->duedate);
             $basestr .= '<div class="info">' . $strduedate . ': ' . $userdate . '</div>';
@@ -157,8 +167,12 @@ function block_my_courses_assign_print_overview($courses, &$htmlarray) {
  * @return bool|string html to display , false if nothing needs to be displayed.
  * @throws coding_exception
  */
-function block_my_courses_assign_get_mysubmission_details_for_print_overview(&$mysubmissions, $sqlassignmentids, $assignmentidparams,
-                                                            $assignment) {
+function block_my_courses_assign_get_mysubmission_details_for_print_overview(
+    &$mysubmissions,
+    $sqlassignmentids,
+    $assignmentidparams,
+    $assignment
+) {
     global $USER, $DB;
 
     if ($assignment->nosubmissions) {
@@ -204,7 +218,8 @@ function block_my_courses_assign_get_mysubmission_details_for_print_overview(&$m
     }
 
     // We need to show details only if a valid submission doesn't exist.
-    if (!$submission ||
+    if (
+        !$submission ||
         !$submission->status ||
         $submission->status == ASSIGN_SUBMISSION_STATUS_DRAFT ||
         $submission->status == ASSIGN_SUBMISSION_STATUS_NEW
@@ -215,7 +230,7 @@ function block_my_courses_assign_get_mysubmission_details_for_print_overview(&$m
     }
     if ($assignment->markingworkflow) {
         $workflowstate = $DB->get_field('assign_user_flags', 'workflowstate', array('assignment' =>
-                $assignment->id, 'userid' => $USER->id));
+        $assignment->id, 'userid' => $USER->id));
         if ($workflowstate) {
             $gradingstatus = 'markingworkflowstate' . $workflowstate;
         } else {
@@ -246,11 +261,14 @@ function block_my_courses_assign_get_mysubmission_details_for_print_overview(&$m
  * @return bool|string html to display , false if nothing needs to be displayed.
  * @throws coding_exception
  */
-function block_my_courses_assign_get_grade_details_for_print_overview(&$unmarkedsubmissions, $sqlassignmentids, $assignmentidparams,
-                                                     $assignment, $context) {
+function block_my_courses_assign_get_grade_details_for_print_overview(
+    &$unmarkedsubmissions,
+    $sqlassignmentids,
+    $assignmentidparams,
+    $assignment,
+    $context
+) {
     global $DB;
-
-    debugging('The function assign_get_grade_details_for_print_overview() is now deprecated.', DEBUG_DEVELOPER);
 
     if (!isset($unmarkedsubmissions)) {
         // Build up and array of unmarked submissions indexed by assignment id/ userid
@@ -286,11 +304,16 @@ function block_my_courses_assign_get_grade_details_for_print_overview(&$unmarked
         $rs->close();
     }
 
+    $assign = new assign($context, null, null);
+
     // Count how many people can submit.
     $submissions = 0;
     if ($students = get_enrolled_users($context, 'mod/assign:view', 0, 'u.id')) {
         foreach ($students as $student) {
             if (isset($unmarkedsubmissions[$assignment->id][$student->id])) {
+                if ($assignment->teamsubmission && !groups_has_membership($assign->get_course_module(), $student->id)) {
+                    continue;
+                }
                 $submissions++;
             }
         }
@@ -300,12 +323,11 @@ function block_my_courses_assign_get_grade_details_for_print_overview(&$unmarked
         $urlparams = array('id' => $assignment->coursemodule, 'action' => 'grading');
         $url = new moodle_url('/mod/assign/view.php', $urlparams);
         $gradedetails = '<div class="details">' .
-                '<a href="' . $url . '">' .
-                get_string('submissionsnotgraded', 'assign', $submissions) .
-                '</a></div>';
+            '<a href="' . $url . '">' .
+            get_string('submissionsnotgraded', 'assign', $submissions) .
+            '</a></div>';
         return $gradedetails;
     } else {
         return false;
     }
-
 }

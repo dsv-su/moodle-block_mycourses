@@ -8,7 +8,8 @@
  * @param array $courses
  * @param array $htmlarray
  */
-function block_my_courses_quiz_print_overview($courses, &$htmlarray) {
+function block_my_courses_quiz_print_overview($courses, &$htmlarray)
+{
     global $USER, $CFG;
 
     // These next 6 Lines are constant in all modules (just change module name).
@@ -69,11 +70,9 @@ function block_my_courses_quiz_print_overview($courses, &$htmlarray) {
                     } else {
                         $str .= '<div class="info">' . $strnoattempts . '</div>';
                     }
-
                 } else {
                     $str .= '<div class="info">' . $strnoattempts . '</div>';
                 }
-
             } else {
                 // For ayone else, there is no point listing this quiz, so stop processing.
                 continue;
@@ -81,13 +80,16 @@ function block_my_courses_quiz_print_overview($courses, &$htmlarray) {
 
             // Give a link to the quiz, and the deadline.
             $html = '<div class="quiz overview">' .
-                    '<div class="name">' . $strquiz . ': <a ' .
-                    ($quiz->visible ? '' : ' class="dimmed"') .
-                    ' href="' . $CFG->wwwroot . '/mod/quiz/view.php?id=' .
-                    $quiz->coursemodule . '">' .
-                    $quiz->name . '</a></div>';
-            $html .= '<div class="info">' . get_string('quizcloseson', 'quiz',
-                    userdate($quiz->timeclose)) . '</div>';
+                '<div class="name">' . $strquiz . ': <a ' .
+                ($quiz->visible ? '' : ' class="dimmed"') .
+                ' href="' . $CFG->wwwroot . '/mod/quiz/view.php?id=' .
+                $quiz->coursemodule . '">' .
+                $quiz->name . '</a></div>';
+            $html .= '<div class="info">' . get_string(
+                'quizcloseson',
+                'quiz',
+                userdate($quiz->timeclose)
+            ) . '</div>';
             $html .= $str;
             $html .= '</div>';
             if (empty($htmlarray[$quiz->course]['quiz'])) {
