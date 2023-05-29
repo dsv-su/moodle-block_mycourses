@@ -34,6 +34,45 @@ class block_my_courses extends block_base {
         $this->title = get_string('pluginname', 'block_my_courses');
     }
 
+    private function ifPassedDaisy($course) {
+        $passedcourse = false;
+        $result = array();
+
+        $idnumbers = explode(',', trim($course->idnumber));
+        foreach ($idnumbers as $id) {
+            $params = array();
+            $params[] = 'rest';
+            $params[] = 'courseSegment';
+            $params[] = trim($id);
+            $result[] = block_my_courses_api_call($params);
+        }
+
+        // Check course endDate, if it's less than time() - the course is finished
+        if (!empty($result)) {
+            foreach ($result as $r) {
+                if (!is_numeric($r->endDate)) {
+                    $r->endDate = strtotime($r->endDate);
+                } else {
+                    $r->endDate = $r->endDate/1000;
+                }
+            }
+            $bestmatch = current($result);
+            // Look if there's a better match
+            foreach ($result as $r) {
+                if (($r->endDate) > ($bestmatch->endDate)) {
+                    // This is the most current course instance, update $bestmatch
+                    $bestmatch = $r;
+                }
+            }
+            // Compare best match's enddate to current time
+            if ($bestmatch->endDate+86400 < time()) {
+                // This is a passed course
+                $passedcourse = true;
+            }
+        }
+            return $passedcourse;
+    }
+
     /**
      * block contents
      *
@@ -181,47 +220,17 @@ class block_my_courses extends block_base {
 
                 $passedcourse = false;
 
-
                 // Let's get the course enddate
                 if ($course->enddate > 0) {
                     if ($course->enddate+86400 < time()) {
                         $passedcourse = true;
                     }
-                // If no enddate, we try to fetch that from Daisy
+                
                 } else if (!empty($course->idnumber)) {
-                    $result = array();
-
-                    $idnumbers = explode(',', trim($course->idnumber));
-                    foreach ($idnumbers as $id) {
-                        $params = array();
-                        $params[] = 'rest';
-                        $params[] = 'courseSegment';
-                        $params[] = trim($id);
-                        $result[] = block_my_courses_api_call($params);
-                    }
-
-                    // Check course endDate, if it's less than time() - the course is finished
-                    if (!empty($result)) {
-                        foreach ($result as $r) {
-                            if (!is_numeric($r->endDate)) {
-                                $r->endDate = strtotime($r->endDate);
-                            } else {
-                                $r->endDate = $r->endDate/1000;
-                            }
-                        }
-                        $bestmatch = current($result);
-                        // Look if there's a better match
-                        foreach ($result as $r) {
-                            if (($r->endDate) > ($bestmatch->endDate)) {
-                                // This is the most current course instance, update $bestmatch
-                                $bestmatch = $r;
-                            }
-                        }
-                        // Compare best match's enddate to current time
-                        if ($bestmatch->endDate+86400 < time()) {
-                            // This is a passed course
-                            $passedcourse = true;
-                        }
+                    if($c->startdate+YEARSECS < time()) {
+                        $passedcourse = true;
+                    } else {
+                        $passedcourse = $this->ifPassedDaisy($course);
                     }
                 }
 
