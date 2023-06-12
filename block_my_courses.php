@@ -227,7 +227,7 @@ class block_my_courses extends block_base {
                     }
                 
                 } else if (!empty($course->idnumber)) {
-                    if($c->startdate+YEARSECS < time()) {
+                    if($course->startdate+YEARSECS < time()) {
                         $passedcourse = true;
                     } else {
                         $passedcourse = $this->ifPassedDaisy($course);
